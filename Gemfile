@@ -29,7 +29,7 @@ gem "solid_cable"
 
 # Background job processing with Sidekiq
 gem "sidekiq", "~> 7.0"
-gem "sidekiq-scheduler", "~> 5.0"
+gem "sidekiq-scheduler", "~> 6.0"
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
