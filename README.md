@@ -1,103 +1,253 @@
+<div align="center">
+
 # 💰 Controle Financeiro
 
-> Sistema moderno e completo de **Gestão Financeira Pessoal e Familiar** construído com **Ruby on Rails 8**, **Tailwind CSS**, **PostgreSQL**, **Sidekiq** e **Inteligência Artificial (Groq / Google Gemini)**.
+**Gestão financeira pessoal e empresarial moderna, inteligente e de código aberto.**  
+Construído com **Ruby on Rails 8**, **Tailwind CSS**, **PostgreSQL**, **Sidekiq** e **Inteligência Artificial (Groq / Gemini)**.
+
+---
+
+[![Ruby](https://img.shields.io/badge/Ruby-3.4.1-CC342D?style=for-the-badge&logo=ruby&logoColor=white)](https://www.ruby-lang.org/)
+[![Rails](https://img.shields.io/badge/Rails-8.1-D30001?style=for-the-badge&logo=rubyonrails&logoColor=white)](https://rubyonrails.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+
+[Funcionalidades](#-funcionalidades-principais) •
+[Início Rápido](#-início-rápido-com-docker) •
+[Instalação Local](#-instalação-local-sem-docker) •
+[Variáveis de Ambiente](#-variáveis-de-ambiente) •
+[Documentação](#-documentação-completa) •
+[Licença](#-licença)
+
+</div>
+
+---
+
+## 💡 Sobre o Projeto
+
+O **Controle Financeiro** é uma plataforma completa e moderna para quem busca controle rigoroso sobre suas finanças pessoais ou pequenos negócios, sem depender de planilhas complexas ou plataformas pagas que retêm seus dados.
+
+Diferente de sistemas tradicionais, a plataforma combina organização de **múltiplas contas**, **faturas de cartão com compras parceladas** e **despesas recorrentes** com o poder de **LLMs de última geração (Groq e Google Gemini)** e um **servidor MCP nativo**, permitindo auditoria e consultoria preditiva sobre suas despesas.
 
 ---
 
 ## 🌟 Funcionalidades Principais
 
-- 📊 **Dashboard Interativo:** Saldo consolidado, receitas vs despesas, gráficos mensais e visão rápida de movimentações pendentes.
-- 🏦 **Múltiplas Contas Bancárias:** Gestão de diferentes bancos, carteiras e contas de investimento com saldos em tempo real.
-- 💳 **Gestão Completa de Cartões de Crédito:** Controle de limites, faturas abertas/fechadas, parcelamentos automáticos e projeções futuras.
-- 🔁 **Movimentações Recorrentes:** Agendamento flexível de despesas e receitas periódicas (mensal, anual, semanal) com geração automática de parcelas.
-- 🏷️ **Categorias Hierárquicas & Auto-categorização:** Organização com categorias pai e subcategorias, além de palavras-chave para classificação automática.
-- 🤖 **Consultoria Financeira com IA:** Análise inteligente de fluxo de caixa, sugestões de cortes e projeções de endividamento usando **Groq (Llama 3)** ou **Google Gemini**.
-- 📥 **Importação Inteligente de Extratos:** Importação de extratos bancários em formatos **CSV** e **PDF** com tela de validação e de/para antes da confirmação.
-- 📧 **Alertas de Vencimento por E-mail:** Job automatizado com envio de resumos diários de contas a vencer via **Resend**.
-- 🔌 **Servidor MCP Integrado:** Conecte facilmente assistentes de IA (Claude Desktop, Cursor, etc.) diretamente aos seus dados via **Model Context Protocol**.
+### 📊 1. Dashboard e Gestão Consolidada
+- **Visão 360°:** Saldo consolidado, receitas x despesas do mês e saldo previsto para os próximos períodos.
+- **Gráficos Interativos:** Distribuição de despesas por categoria e evolução temporal do patrimônio.
+- **Múltiplas Contas Bancárias:** Acompanhe saldos individuais e movimentações de contas correntes, poupanças e investimentos.
+- **Transferências Pareadas:** Transações entre contas do mesmo usuário com garantia de integridade e idempotência.
+
+### 💳 2. Cartões de Crédito e Faturas Parceladas
+- **Controle por Cartão:** Dias de fechamento e vencimento, limites disponíveis e limites comprometidos.
+- **Parcelamentos Automáticos:** Lançamento de compras parceladas com geração e distribuição matemática de parcelas nos meses subsequentes.
+- **Faturas Mensais Dinâmicas:** Abertura, fechamento e quitação de faturas com reconciliação imediata na conta bancária de pagamento.
+
+### 🔁 3. Recorrências & Projeções de Fluxo de Caixa
+- **Agendamento Flexível:** Despesas e receitas diárias, semanais, quinzenais, mensais, bimestrais ou anuais.
+- **Estratégias de Edição:** Escolha entre aplicar reajustes em *todas as parcelas futuras* ou *a partir de uma ocorrência específica*.
+- **Geração Automatizada:** Jobs em segundo plano que mantêm sua linha do tempo financeira sempre projetada.
+
+### 🤖 4. Consultoria Financeira com IA
+- **Análise Preditiva de Gastos:** Diagnóstico automatizado de padrões de consumo, detecção de gastos invisíveis e oportunidades de economia.
+- **Multi-Provedor:** Suporte flexível a **Groq (Llama 3.3 70B)** e **Google Gemini (Gemini 2.5 Flash)**.
+- **Chaves Personalizadas:** Cada usuário pode optar por usar a chave global do sistema ou cadastrar sua própria chave de API.
+
+### 📥 5. Importação Inteligente de Extratos
+- **Suporte a CSV e PDF:** Envie extratos bancários e visualize um preview estruturado antes de confirmar.
+- **Auto-categorização:** Motor de inferência baseado em palavras-chave (`CategoryKeyword`) que classifica lançamentos automaticamente.
+
+### 📧 6. Alertas e Notificações Automatizadas
+- **Alertas de Vencimento:** Notificações diárias estruturadas via **Resend** alertando sobre contas vencendo em 5 dias, 3 dias, hoje ou já em atraso.
+
+### 🔌 7. Servidor MCP (Model Context Protocol) Nativo
+- **Integração com Assistentes de IA:** Conecte o Claude Desktop, Cursor, Antigravity ou scripts autônomos para interagir com suas finanças via linguagem natural com autenticação por Bearer Token.
 
 ---
 
-## 🛠️ Stack Tecnológica
+## 🏛️ Arquitetura & Fluxo de Dados
 
-| Camada | Tecnologia |
-| :--- | :--- |
-| **Backend** | Ruby 3.4.1, Rails 8.1, Puma |
-| **Frontend** | Tailwind CSS, Stimulus.js, Turbo / Hotwire |
-| **Banco de Dados** | PostgreSQL 14+ |
-| **Filas & Cache** | Redis 7+, Sidekiq |
-| **Inteligência Artificial** | Groq API, Google Gemini API |
-| **Disparo de E-mails** | Resend API |
-| **Containerização** | Docker & Docker Compose |
+```mermaid
+flowchart TD
+    User([Usuário / Web / Mobile]) -->|Hotwire / Turbo| RailsApp[Rails 8 Core]
+    MCP([Agentes IA / MCP Clients]) -->|JSON-RPC / HTTP| RailsApp
 
----
+    RailsApp --> DB[(PostgreSQL)]
+    RailsApp --> Redis[(Redis)]
+    Redis --> Sidekiq[Sidekiq Background Jobs]
 
-## 🚀 Como Executar
-
-### Opção 1: Via Docker Compose (Recomendado)
-
-1. **Clone o repositório:**
-   ```bash
-   git clone https://github.com/seu-usuario/controle-financeiro.git
-   cd controle-financeiro
-   ```
-
-2. **Copie o arquivo de variáveis de ambiente:**
-   ```bash
-   cp .env.example .env
-   ```
-
-3. **Inicie os containers:**
-   ```bash
-   docker compose up -d --build
-   ```
-
-4. **Prepare o banco de dados:**
-   ```bash
-   docker compose exec web bundle exec rails db:prepare
-   docker compose exec web bundle exec rails db:seed
-   ```
-
-5. **Acesse no navegador:**
-   - Aplicação: [http://localhost:3000](http://localhost:3000)
-   - Painel Sidekiq: [http://localhost:3000/sidekiq](http://localhost:3000/sidekiq)
+    Sidekiq -->|Alertas Diários| ResendAPI[Resend Email API]
+    Sidekiq -->|Geração Futura| Recurrences[Recurrence Service]
+    
+    RailsApp -->|Consultoria Financeira| Groq[Groq API / Llama 3]
+    RailsApp -->|Consultoria Financeira| Gemini[Google Gemini API]
+```
 
 ---
 
-### Opção 2: Instalação Local (Sem Docker)
+## 🚀 Início Rápido com Docker
 
-Consulte o [Guia Completo de Instalação Local](docs/instalacao.md) para detalhes sobre configuração passo a passo com Ruby, PostgreSQL e Redis instalados na máquina.
+A maneira mais rápida de rodar toda a aplicação (Rails + PostgreSQL + Redis + Sidekiq) é utilizando o Docker Compose:
+
+### 1. Clonar o projeto
+```bash
+git clone https://github.com/seu-usuario/controle-financeiro.git
+cd controle-financeiro
+```
+
+### 2. Configurar o arquivo `.env`
+```bash
+cp .env.example .env
+```
+*(As configurações padrão do `.env.example` já estão prontas para o ambiente Docker).*
+
+### 3. Subir os containers
+```bash
+docker compose up -d --build
+```
+
+### 4. Inicializar o banco de dados
+```bash
+# Executa as migrações e popula as categorias padrão
+docker compose exec web bundle exec rails db:prepare
+docker compose exec web bundle exec rails db:seed
+```
+
+Pronto! Acesse:
+- 🌐 **Aplicação Web:** [http://localhost:3000](http://localhost:3000)
+- ⚙️ **Painel do Sidekiq:** [http://localhost:3000/sidekiq](http://localhost:3000/sidekiq)
 
 ---
 
-## ⚙️ Variáveis de Ambiente Principais
+## 💻 Instalação Local (Sem Docker)
 
-Copie `.env.example` para `.env` e configure conforme necessário:
+Se preferir rodar nativamente na sua máquina:
 
-| Variável | Descrição | Padrão |
-| :--- | :--- | :--- |
-| `DATABASE_HOST` | Host do banco de dados | `localhost` / `db` |
-| `DATABASE_USER` | Usuário do PostgreSQL | `postgres` |
-| `DATABASE_PASSWORD` | Senha do PostgreSQL | `postgres` |
-| `REDIS_URL` | URL de conexão com o Redis | `redis://localhost:6379/0` |
-| `RESEND_API_KEY` | Chave de envio de e-mails (Resend) | Opcional em desenvolvimento |
-| `AI_PROVIDER` | Motor de IA padrão (`groq` ou `gemini`) | `groq` |
-| `GROQ_API_KEY` | Chave de API da plataforma Groq | Opcional |
-| `GEMINI_API_KEY` | Chave de API do Google Gemini | Opcional |
-| `MCP_AUTH_TOKEN` | Token de segurança para o endpoint MCP | Opcional |
+### Pré-requisitos
+- **Ruby:** `3.4.1`
+- **PostgreSQL:** `14+`
+- **Redis:** `7+`
+- **Node.js:** `v20+` e **npm** `10+`
+
+### Passo a passo
+```bash
+# 1. Instalar dependências
+bundle install
+npm install
+
+# 2. Configurar variáveis de ambiente
+cp .env.example .env
+
+# 3. Preparar banco de dados
+bundle exec rails db:create db:migrate db:seed
+
+# 4. Iniciar servidores de desenvolvimento (Rails + Tailwind + Sidekiq)
+./bin/dev
+```
+
+Para mais detalhes, leia o [Guia Detalhado de Instalação](docs/instalacao.md).
 
 ---
 
-## 📚 Documentação Adicional
+## ⚙️ Variáveis de Ambiente
 
-- [Guia de Instalação e Execução](docs/instalacao.md)
-- [Arquitetura e Entidades do Sistema](docs/funcionalidades.md)
-- [Como Funcionam as Recorrências](docs/recorrencias.md)
-- [Configuração de Notificações por E-mail](docs/notificacoes-email.md)
-- [Servidor Model Context Protocol (MCP)](docs/mcp.md)
+Todas as configurações são gerenciadas através de variáveis de ambiente. Veja as principais:
+
+| Variável | Obrigatória? | Descrição | Valor Padrão |
+| :--- | :---: | :--- | :--- |
+| `SECRET_KEY_BASE` | Sim (Prod) | Chave criptográfica do Rails (`rails secret`) | - |
+| `DATABASE_HOST` | Não | Endereço do host do PostgreSQL | `localhost` (ou `db`) |
+| `DATABASE_USER` | Não | Usuário do PostgreSQL | `postgres` |
+| `DATABASE_PASSWORD` | Não | Senha do PostgreSQL | `postgres` |
+| `DATABASE_NAME` | Não | Nome do banco de dados | `finances_development` |
+| `REDIS_URL` | Não | URL de conexão do Redis | `redis://localhost:6379/0` |
+| `SIDEKIQ_USERNAME` | Não | Usuário para o painel `/sidekiq` | `admin` |
+| `SIDEKIQ_PASSWORD` | Não | Senha para o painel `/sidekiq` | `sidekiq` (dev) |
+| `RESEND_API_KEY` | Não | Chave de envio da API Resend | - |
+| `MAILER_DEFAULT_FROM` | Não | E-mail de remetente dos alertas | `noreply@example.com` |
+| `AI_PROVIDER` | Não | Motor de IA padrão (`groq` ou `gemini`) | `groq` |
+| `GROQ_API_KEY` | Não | Chave da API Groq | - |
+| `GEMINI_API_KEY` | Não | Chave da API Google Gemini | - |
+| `MCP_AUTH_TOKEN` | Não | Token de autenticação Bearer para o `/mcp` | - |
+
+Consulte o arquivo [.env.example](.env.example) para ver todas as opções comentadas.
+
+---
+
+## 📁 Estrutura do Repositório
+
+```text
+controle-financeiro/
+├── app/
+│   ├── controllers/         # Controladores da aplicação e endpoint MCP
+│   ├── javascript/          # Controladores Stimulus e gráficos Chart.js
+│   ├── jobs/                # Jobs assíncronos (notificações, geração de recorrências)
+│   ├── mailers/             # Templates de e-mails transacionais (Resend)
+│   ├── models/              # Modelos de dados e validações de negócio
+│   ├── services/            # Serviços de IA (Groq/Gemini), faturas, extratos e MCP
+│   └── views/               # Views com Tailwind CSS e componentes Hotwire/Turbo
+├── config/                  # Configurações do Rails, rotas, sidekiq e banco
+├── db/                      # Migrations, schemas e seeds
+├── docs/                    # Documentação técnica e manuais de uso
+│   ├── funcionalidades.md   # Módulos, arquitetura e diagrama ER
+│   ├── instalacao.md        # Guia completo de instalação Docker e nativa
+│   ├── mcp.md               # Integração do servidor Model Context Protocol
+│   ├── notificacoes-email.md# Configuração de e-mails com Resend
+│   └── recorrencias.md      # Lógica e regras de parcelamentos/recorrências
+├── docker-compose.yml       # Orquestração local de desenvolvimento
+├── Dockerfile               # Imagem Docker otimizada multi-stage
+└── mcp/                     # Implementação do servidor MCP stdio e exemplos
+```
+
+---
+
+## 📚 Documentação Completa
+
+Acesse os guias complementares para se aprofundar em cada módulo:
+
+- 📖 [Guia Completo de Instalação](docs/instalacao.md)
+- 🏗️ [Arquitetura de Dados e Funcionalidades](docs/funcionalidades.md)
+- 🔁 [Como Funcionam as Recorrências](docs/recorrencias.md)
+- 📧 [Alertas de Vencimento por E-mail](docs/notificacoes-email.md)
+- 🔌 [Manual do Servidor MCP](docs/mcp.md)
+
+---
+
+## 🧪 Testes e Qualidade de Código
+
+O projeto conta com suíte de testes unitários e de integração, além de linters de segurança:
+
+```bash
+# Executar a suíte de testes
+bundle exec rails test
+
+# Análise estática de vulnerabilidades com Brakeman
+bundle exec brakeman --no-pager
+
+# Auditoria de dependências com Bundler Audit
+bundle exec bundler-audit
+
+# Verificação de padrões de código com RuboCop
+bundle exec rubocop
+```
+
+---
+
+## 🤝 Contribuições
+
+Contribuições são muito bem-vindas! Se você deseja colaborar com novas funcionalidades, melhorias na interface ou correções de bugs:
+
+1. Faça um Fork do projeto
+2. Crie uma branch para sua funcionalidade (`git checkout -b feature/minha-melhoria`)
+3. Faça commit das suas alterações (`git commit -m 'feat: adiciona nova funcionalidade'`)
+4. Faça push para a branch (`git push origin feature/minha-melhoria`)
+5. Abra um **Pull Request**
 
 ---
 
 ## 📄 Licença
 
-Este projeto está sob a licença [MIT](LICENSE).
+Este projeto é disponibilizado sob a licença [MIT](LICENSE). Sinta-se livre para usar, modificar e distribuir conforme necessário.
