@@ -1,0 +1,638 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Movimentações</h1>
+      <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Gerencie lançamentos, entradas, saídas e faturas</p>
+    </div>
+    
+    <div class="flex items-center gap-2.5 w-full sm:w-auto">
+      <%= link_to new_transaction_import_path, class: "inline-flex items-center justify-center flex-1 sm:flex-initial px-3.5 py-2.5 rounded-xl border border-brand-200 text-xs font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 transition shadow-2xs" do %>
+        <span class="mr-1.5">⚡</span> Importar Extrato (IA)
+      <% end %>
+
+      <!-- Dropdown Menu -->
+      <div class="relative inline-block text-left flex-1 sm:flex-initial" data-controller="dropdown">
+        <button 
+          type="button" 
+          class="inline-flex items-center justify-center w-full px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 transition shadow-sm hover:shadow active:scale-95" 
+          data-dropdown-target="button" 
+          data-action="click->dropdown#toggle"
+        >
+          <span>Nova Movimentação</span>
+          <svg class="ml-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+
+        <div data-dropdown-target="menu" class="hidden origin-top-right absolute right-0 mt-2 w-56 rounded-2xl shadow-elevated bg-white border border-slate-100 divide-y divide-slate-100 focus:outline-none z-20 overflow-hidden">
+          <div class="py-1.5">
+            <%= link_to "Criar movimentação de conta", new_transaction_path, class: "text-slate-700 block w-full px-4 py-2 text-xs font-medium hover:bg-slate-50 transition" %>
+          </div>
+          <div class="py-1.5">
+            <%= link_to new_transaction_import_path, class: "text-brand-700 font-semibold block w-full px-4 py-2 text-xs hover:bg-brand-50 transition flex items-center justify-between" do %>
+              <span>📄 Importar Extrato PDF</span>
+              <span class="text-[9px] bg-brand-100 text-brand-800 px-1.5 py-0.5 rounded font-bold">IA</span>
+            <% end %>
+          </div>
+          <div class="py-1.5">
+            <% if current_user_credit_cards.any? %>
+              <button type="button" class="text-slate-700 w-full text-left px-4 py-2 text-xs font-medium hover:bg-slate-50 transition flex items-center justify-between" data-dropdown-target="submenuButton" data-action="click->dropdown#toggleSubmenu">
+                <span>Movimentação de cartão</span>
+                <span class="text-slate-400 text-[10px]">▶</span>
+              </button>
+              <div data-dropdown-target="submenu" class="hidden bg-slate-50 py-1 border-t border-slate-100">
+                <% current_user_credit_cards.each do |card| %>
+                  <%= link_to card.name, new_credit_card_purchase_path(card), class: "text-slate-600 block px-5 py-1.5 text-xs hover:text-brand-600 hover:bg-slate-100/70" %>
+                <% end %>
+              </div>
+            <% else %>
+              <span class="text-slate-400 block px-4 py-2 text-xs cursor-not-allowed">Nenhum cartão cadastrado</span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="app-card p-4 sm:p-5">
+    <%= form_with url: transactions_path, method: :get, local: true, class: "space-y-4" do |f| %>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+        <div>
+          <%= f.label :month, "Mês", class: "block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1" %>
+          <%= f.select :month, options_for_select(Transaction::MONTHS.invert, @month), { include_blank: false }, class: "form-select-custom text-xs" %>
+        </div>
+        <div>
+          <%= f.label :year, "Ano", class: "block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1" %>
+          <%= f.select :year, options_for_select((Date.today.year - 5..Date.today.year + 1).map { |y| [y.to_s, y] }, @year), { include_blank: false }, class: "form-select-custom text-xs" %>
+        </div>
+        <div>
+          <%= f.label :type, "Tipo", class: "block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1" %>
+          <%= f.select :type, options_for_select([["Entrada", "Entrada"], ["Saída", "Saída"], ["Investimento / Aporte", "Investimento"]], params[:type]), { include_blank: "Todos os tipos" }, class: "form-select-custom text-xs" %>
+        </div>
+        <div>
+          <%= f.label :bank_account_id, "Conta", class: "block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1" %>
+          <%= f.select :bank_account_id, options_for_select(current_user_bank_accounts.map { |ba| [ba.name, ba.id] }, params[:bank_account_id]), { include_blank: "Todas as contas" }, class: "form-select-custom text-xs" %>
+        </div>
+        <div>
+          <%= f.label :category_id, "Categoria", class: "block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1" %>
+          <%= f.select :category_id, options_for_select(current_user_categories.map { |c| [c.name, c.id] }, params[:category_id]), { include_blank: "Todas categorias" }, class: "form-select-custom text-xs" %>
+        </div>
+        <div>
+          <%= f.label :paid, "Status", class: "block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1" %>
+          <%= f.select :paid, options_for_select(["Pago", "Pendente", "Atrasado"], params[:paid]), { include_blank: "Todos status" }, class: "form-select-custom text-xs" %>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-slate-100 flex-wrap gap-2">
+        <div class="flex items-center gap-2">
+          <%= f.button type: :submit, class: "btn-primary btn-sm" do %>
+            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+            Filtrar
+          <% end %>
+          <%= link_to "Limpar Filtros", transactions_path, class: "btn-secondary btn-sm" %>
+        </div>
+
+        <div>
+          <%= link_to transactions_path(format: :csv, month: @month, year: @year, type: params[:type], bank_account_id: params[:bank_account_id], category_id: params[:category_id], paid: params[:paid]), target: "_blank", class: "btn-secondary btn-sm text-slate-600" do %>
+            <svg class="w-3.5 h-3.5 mr-1 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Exportar CSV
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Balance Summary Cards -->
+  <div class="grid grid-cols-2 <%= @investment_paid.to_d > 0 ? 'sm:grid-cols-3 lg:grid-cols-6' : 'sm:grid-cols-3 lg:grid-cols-5' %> gap-3 sm:gap-4">
+    <div class="app-card p-4 flex flex-col justify-between">
+      <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Saldo Anterior</span>
+      <p class="text-lg sm:text-xl font-extrabold mt-1 <%= @previous_month_balance >= 0 ? 'text-slate-800' : 'text-rose-600' %>">
+        <%= number_to_currency(@previous_month_balance, unit: "R$", separator: ",", delimiter: ".") %>
+      </p>
+      <span class="text-[10px] text-slate-400 mt-1"><%= (@month_start - 1.day).strftime("%b/%Y") %></span>
+    </div>
+
+    <div class="app-card p-4 flex flex-col justify-between">
+      <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Entradas (Pagas)</span>
+      <p class="text-lg sm:text-xl font-extrabold mt-1 text-emerald-600">
+        <%= number_to_currency(@income_paid, unit: "R$", separator: ",", delimiter: ".") %>
+      </p>
+      <span class="text-[10px] text-slate-400 mt-1"><%= @month_start.strftime("%b/%Y") %></span>
+    </div>
+
+    <div class="app-card p-4 flex flex-col justify-between">
+      <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Saídas (Pagas)</span>
+      <p class="text-lg sm:text-xl font-extrabold mt-1 text-rose-600">
+        <%= number_to_currency(@expense_paid, unit: "R$", separator: ",", delimiter: ".") %>
+      </p>
+      <span class="text-[10px] text-slate-400 mt-1"><%= @month_start.strftime("%b/%Y") %></span>
+    </div>
+
+    <% if @investment_paid.to_d > 0 %>
+      <div class="app-card p-4 flex flex-col justify-between border-l-2 border-l-indigo-400">
+        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Investimentos (Aportes)</span>
+        <p class="text-lg sm:text-xl font-extrabold mt-1 text-indigo-600">
+          <%= number_to_currency(@investment_paid, unit: "R$", separator: ",", delimiter: ".") %>
+        </p>
+        <span class="text-[10px] text-slate-400 mt-1">Patrimônio / Fundos</span>
+      </div>
+    <% end %>
+
+    <div class="app-card p-4 flex flex-col justify-between">
+      <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Saldo Atual</span>
+      <p class="text-lg sm:text-xl font-extrabold mt-1 <%= @current_balance >= 0 ? 'text-emerald-700' : 'text-rose-600' %>">
+        <%= number_to_currency(@current_balance, unit: "R$", separator: ",", delimiter: ".") %>
+      </p>
+      <span class="text-[10px] text-slate-400 mt-1"><%= @month_end.strftime("%b/%Y") %></span>
+    </div>
+
+    <div class="app-card p-4 flex flex-col justify-between border-l-2 <%= @projected_balance >= 0 ? 'border-l-teal-500' : 'border-l-rose-500' %>">
+      <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Previsão de Saldo</span>
+      <p class="text-lg sm:text-xl font-extrabold mt-1 <%= @projected_balance >= 0 ? 'text-teal-700' : 'text-rose-600' %>">
+        <%= number_to_currency(@projected_balance, unit: "R$", separator: ",", delimiter: ".") %>
+      </p>
+      <span class="text-[10px] text-slate-400 mt-1">Saídas pendentes: <%= number_to_currency(@expense_unpaid, unit: "R$", separator: ",", delimiter: ".") %></span>
+    </div>
+  </div>
+
+  <!-- Transactions Table -->
+  <div class="app-card overflow-hidden" data-controller="payment bulk-select">
+    <% combined_items = [] %>
+    <% @transactions.each { |t| combined_items << { type: 'transaction', object: t } } %>
+    <% @invoices.each { |i| combined_items << { type: 'invoice', object: i } } %>
+    <% combined_items.sort_by! { |item| item[:type] == 'transaction' ? item[:object].due_date : item[:object].due_date } %>
+    <% combined_items.reverse! %>
+
+    <% if combined_items.any? %>
+      <!-- Bulk Action Bar -->
+      <div data-bulk-select-target="toolbar" class="hidden bg-indigo-950 text-white px-4 py-3 sm:px-6 border-b border-indigo-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all">
+        <div class="flex items-center gap-2.5">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-indigo-500 text-white text-xs font-extrabold" data-bulk-select-target="count">0</span>
+          <span class="text-xs sm:text-sm font-semibold text-indigo-100">movimentação(ões) selecionada(s)</span>
+          <button type="button" data-action="click->bulk-select#clear" class="text-[11px] font-medium text-indigo-300 hover:text-white underline ml-2 cursor-pointer">
+            Limpar seleção
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <%= form_with url: bulk_mark_paid_transactions_path, method: :patch, local: true, class: "inline-flex" do %>
+            <div data-bulk-select-target="formInputs"></div>
+            <button type="submit" class="btn-success btn-sm text-xs gap-1.5 cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>Pagar Selecionadas</span>
+            </button>
+          <% end %>
+
+          <%= form_with url: bulk_destroy_transactions_path, method: :delete, local: true, data: { turbo_confirm: "Tem certeza que deseja remover todas as movimentações selecionadas?" }, class: "inline-flex" do %>
+            <div data-bulk-select-target="formInputs"></div>
+            <button type="submit" class="btn-danger btn-sm text-xs gap-1.5 cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              <span>Remover Selecionadas</span>
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Desktop Table -->
+      <div class="hidden sm:block overflow-x-auto">
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th class="w-10 text-center">
+                <input type="checkbox" data-bulk-select-target="selectAll" data-action="change->bulk-select#toggleAll" class="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer" title="Selecionar todas as movimentações" aria-label="Selecionar todas">
+              </th>
+              <th>Descrição</th>
+              <th>Conta / Cartão</th>
+              <th>Categoria</th>
+              <th>Data</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th class="text-right w-16">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% combined_items.each do |item| %>
+              <% if item[:type] == 'transaction' %>
+                <% transaction = item[:object] %>
+                <tr class="transition-colors">
+                  <td class="w-10 text-center">
+                    <input type="checkbox" value="<%= transaction.id %>" data-paid="<%= transaction.paid? %>" data-bulk-select-target="checkbox" data-action="change->bulk-select#toggleItem" class="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer" aria-label="Selecionar <%= transaction.title %>">
+                  </td>
+                  <td>
+                    <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                      <% if transaction.transfer? %>
+                        <span class="text-slate-400">↔️</span>
+                      <% elsif transaction.investment? %>
+                        <span class="text-indigo-600 text-xs">💎</span>
+                      <% end %>
+                      <%= link_to transaction.title, transaction, class: "hover:text-brand-600 transition" %>
+                    </div>
+                    <% if transaction.recurrence %>
+                      <div class="text-[11px] text-slate-400">Recorrência #<%= transaction.recurrence_index %></div>
+                    <% end %>
+                    <% if transaction.transfer? && transaction.destination_bank_account %>
+                      <div class="text-[11px] text-slate-400">Para: <%= transaction.destination_bank_account.name %></div>
+                    <% end %>
+                  </td>
+                  <td>
+                    <%= link_to transaction.bank_account.name, transaction.bank_account, class: "font-semibold text-brand-600 hover:text-brand-800 transition" %>
+                  </td>
+                  <td>
+                    <% if transaction.category %>
+                      <span class="inline-flex items-center gap-1 font-medium text-slate-700">
+                        <%= transaction.category.name %>
+                        <% if transaction.auto_categorized? %>
+                          <span class="text-[10px] text-slate-400 font-normal">(auto)</span>
+                        <% end %>
+                      </span>
+                    <% else %>
+                      <span class="text-slate-300">-</span>
+                    <% end %>
+                  </td>
+                  <td class="text-xs text-slate-600">
+                    <div><%= transaction.due_date.strftime("%d/%m/%Y") %></div>
+                    <% if transaction.paid_at %>
+                      <div class="text-[10px] text-slate-400">Pago: <%= transaction.paid_at.strftime("%d/%m/%Y") %></div>
+                    <% end %>
+                  </td>
+                  <td class="font-bold whitespace-nowrap <%= transaction.income? ? 'text-emerald-600' : (transaction.investment? ? 'text-indigo-600' : 'text-rose-600') %>">
+                    <% if transaction.income? %>
+                      +<%= number_to_currency(transaction.amount, unit: "R$", separator: ",", delimiter: ".") %>
+                    <% elsif transaction.investment? %>
+                      <span class="text-xs mr-0.5">💎</span><%= number_to_currency(transaction.amount, unit: "R$", separator: ",", delimiter: ".") %>
+                    <% else %>
+                      -<%= number_to_currency(transaction.amount, unit: "R$", separator: ",", delimiter: ".") %>
+                    <% end %>
+                  </td>
+                  <td>
+                    <% if transaction.overdue? %>
+                      <span class="badge badge-danger">Atrasado</span>
+                    <% elsif transaction.paid? %>
+                      <span class="badge badge-success">Pago</span>
+                    <% else %>
+                      <span class="badge badge-warning">Pendente</span>
+                    <% end %>
+                  </td>
+                  <td class="text-right">
+                    <div class="relative inline-block text-left" data-controller="dropdown">
+                      <button type="button" class="action-menu-btn" data-dropdown-target="button" data-action="click->dropdown#toggle" title="Ações" aria-label="Menu de ações">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                      </button>
+
+                      <div data-dropdown-target="menu" class="hidden action-menu-dropdown">
+                        <%= link_to transaction, class: "action-menu-item" do %>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                          <span>Ver detalhes</span>
+                        <% end %>
+                        <%= link_to edit_transaction_path(transaction), class: "action-menu-item" do %>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                          <span>Editar</span>
+                        <% end %>
+                        <% if !transaction.paid? %>
+                          <%= link_to mark_paid_transaction_path(transaction), method: :patch, data: { turbo_method: :patch }, class: "action-menu-item action-menu-item-success" do %>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <span>Marcar Pago</span>
+                          <% end %>
+                        <% end %>
+                        <div class="action-menu-divider"></div>
+                        <%= link_to transaction, data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja apagar esta movimentação?" }, class: "action-menu-item action-menu-item-danger" do %>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                          <span>Apagar</span>
+                        <% end %>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              <% elsif item[:type] == 'invoice' %>
+                <% invoice = item[:object] %>
+                <tr class="bg-indigo-50/30">
+                  <td class="w-10 text-center"></td>
+                  <td>
+                    <div class="font-bold text-indigo-950 flex items-center gap-1.5">
+                      <span>💳</span>
+                      <%= link_to "Fatura #{invoice.reference_label}", credit_card_invoice_path(invoice.credit_card, invoice), class: "hover:text-indigo-700 transition" %>
+                    </div>
+                    <div class="text-[11px] text-indigo-400">Fatura Cartão de Crédito</div>
+                  </td>
+                  <td>
+                    <%= link_to invoice.credit_card.name, credit_card_path(invoice.credit_card), class: "font-semibold text-indigo-600 hover:text-indigo-800" %>
+                  </td>
+                  <td>
+                    <span class="badge badge-purple text-[10px]">Fatura</span>
+                  </td>
+                  <td class="text-xs text-slate-600">
+                    <div><%= invoice.due_date.strftime("%d/%m/%Y") %></div>
+                    <div class="text-[10px] text-slate-400">Fech: <%= invoice.closing_date.strftime("%d/%m/%Y") %></div>
+                  </td>
+                  <td class="font-bold whitespace-nowrap text-rose-600">
+                    -<%= number_to_currency(invoice.total_amount, unit: "R$", separator: ",", delimiter: ".") %>
+                  </td>
+                  <td>
+                    <% if invoice.overdue? %>
+                      <span class="badge badge-danger">Atrasado</span>
+                    <% elsif invoice.paid? %>
+                      <span class="badge badge-success">Pago</span>
+                    <% else %>
+                      <span class="badge badge-warning">Pendente</span>
+                    <% end %>
+                  </td>
+                  <td class="text-right">
+                    <div class="relative inline-block text-left" data-controller="dropdown">
+                      <button type="button" class="action-menu-btn" data-dropdown-target="button" data-action="click->dropdown#toggle" title="Ações" aria-label="Menu de ações">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                      </button>
+
+                      <div data-dropdown-target="menu" class="hidden action-menu-dropdown">
+                        <%= link_to credit_card_invoice_path(invoice.credit_card, invoice), class: "action-menu-item" do %>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                          <span>Ver Fatura</span>
+                        <% end %>
+                        <% if !invoice.paid? %>
+                          <button type="button" class="action-menu-item action-menu-item-success" data-payment-target="toggleButton" data-modal-id="paymentModal_<%= invoice.id %>" data-action="click->payment#openModal">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <span>Pagar Fatura</span>
+                          </button>
+                        <% end %>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile Card View -->
+      <div class="sm:hidden divide-y divide-slate-100">
+        <% if @transactions.any? %>
+          <div class="px-4 py-2.5 bg-slate-50 flex items-center gap-2.5 text-xs font-semibold text-slate-600">
+            <input type="checkbox" data-bulk-select-target="selectAll" data-action="change->bulk-select#toggleAll" class="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer" id="mobileSelectAll">
+            <label for="mobileSelectAll" class="cursor-pointer select-none">Selecionar todas as movimentações</label>
+          </div>
+        <% end %>
+        <% combined_items.each do |item| %>
+          <% if item[:type] == 'transaction' %>
+            <% transaction = item[:object] %>
+            <div class="p-4 hover:bg-slate-50/60 transition" data-bulk-row>
+              <div class="flex justify-between items-start gap-2 mb-2">
+                <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                  <input type="checkbox" value="<%= transaction.id %>" data-paid="<%= transaction.paid? %>" data-bulk-select-target="checkbox" data-action="change->bulk-select#toggleItem" class="mt-0.5 w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer flex-shrink-0" aria-label="Selecionar <%= transaction.title %>">
+                  <div class="min-w-0 flex-1">
+                    <div class="text-sm font-bold text-slate-900">
+                      <%= link_to (transaction.transfer? ? "↔️ #{transaction.title}" : (transaction.investment? ? "💎 #{transaction.title}" : transaction.title)), transaction, class: "hover:text-brand-600 transition" %>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-0.5"><%= transaction.bank_account.name %></div>
+                    <% if transaction.category %>
+                      <div class="text-[11px] text-slate-500 font-medium"><%= transaction.category.name %></div>
+                    <% end %>
+                  </div>
+                </div>
+                <div class="text-right flex-shrink-0">
+                  <div class="text-sm font-extrabold <%= transaction.income? ? 'text-emerald-600' : (transaction.investment? ? 'text-indigo-600' : 'text-rose-600') %>">
+                    <% if transaction.income? %>
+                      +<%= number_to_currency(transaction.amount, unit: "R$", separator: ",", delimiter: ".") %>
+                    <% elsif transaction.investment? %>
+                      💎 <%= number_to_currency(transaction.amount, unit: "R$", separator: ",", delimiter: ".") %>
+                    <% else %>
+                      -<%= number_to_currency(transaction.amount, unit: "R$", separator: ",", delimiter: ".") %>
+                    <% end %>
+                  </div>
+                  <div class="text-[11px] text-slate-400"><%= transaction.due_date.strftime("%d/%m/%Y") %></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between pt-2 border-t border-slate-100/80">
+                <div>
+                  <% if transaction.overdue? %>
+                    <span class="badge badge-danger">Atrasado</span>
+                  <% elsif transaction.paid? %>
+                    <span class="badge badge-success">Pago</span>
+                  <% else %>
+                    <span class="badge badge-warning">Pendente</span>
+                  <% end %>
+                </div>
+                <div class="relative inline-block text-left" data-controller="dropdown">
+                  <button type="button" class="action-menu-btn" data-dropdown-target="button" data-action="click->dropdown#toggle" title="Ações" aria-label="Menu de ações">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                  </button>
+
+                  <div data-dropdown-target="menu" class="hidden action-menu-dropdown">
+                    <%= link_to transaction, class: "action-menu-item" do %>
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                      <span>Ver detalhes</span>
+                    <% end %>
+                    <%= link_to edit_transaction_path(transaction), class: "action-menu-item" do %>
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                      <span>Editar</span>
+                    <% end %>
+                    <% if !transaction.paid? %>
+                      <%= link_to mark_paid_transaction_path(transaction), method: :patch, data: { turbo_method: :patch }, class: "action-menu-item action-menu-item-success" do %>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span>Marcar Pago</span>
+                      <% end %>
+                    <% end %>
+                    <div class="action-menu-divider"></div>
+                    <%= link_to transaction, data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja apagar esta movimentação?" }, class: "action-menu-item action-menu-item-danger" do %>
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                      <span>Apagar</span>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% elsif item[:type] == 'invoice' %>
+            <% invoice = item[:object] %>
+            <div class="p-4 bg-indigo-50/20 hover:bg-indigo-50/40 transition">
+              <div class="flex justify-between items-start gap-2 mb-2">
+                <div>
+                  <div class="text-sm font-bold text-indigo-950">
+                    <%= link_to "💳 Fatura #{invoice.reference_label}", credit_card_invoice_path(invoice.credit_card, invoice), class: "hover:text-indigo-700 transition" %>
+                  </div>
+                  <div class="text-xs text-indigo-500"><%= invoice.credit_card.name %></div>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm font-extrabold text-rose-600">
+                    -<%= number_to_currency(invoice.total_amount, unit: "R$", separator: ",", delimiter: ".") %>
+                  </div>
+                  <div class="text-[11px] text-slate-400"><%= invoice.due_date.strftime("%d/%m/%Y") %></div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-indigo-100/60">
+                <div>
+                  <% if invoice.overdue? %>
+                    <span class="badge badge-danger">Atrasado</span>
+                  <% elsif invoice.paid? %>
+                    <span class="badge badge-success">Pago</span>
+                  <% else %>
+                    <span class="badge badge-warning">Pendente</span>
+                  <% end %>
+                </div>
+                <div class="relative inline-block text-left" data-controller="dropdown">
+                  <button type="button" class="action-menu-btn" data-dropdown-target="button" data-action="click->dropdown#toggle" title="Ações" aria-label="Menu de ações">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                  </button>
+
+                  <div data-dropdown-target="menu" class="hidden action-menu-dropdown">
+                    <%= link_to credit_card_invoice_path(invoice.credit_card, invoice), class: "action-menu-item" do %>
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                      <span>Ver Fatura</span>
+                    <% end %>
+                    <% if !invoice.paid? %>
+                      <button type="button" class="action-menu-item action-menu-item-success" data-payment-target="toggleButton" data-modal-id="paymentModal_<%= invoice.id %>" data-action="click->payment#openModal">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span>Pagar Fatura</span>
+                      </button>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+
+      <!-- Modern Summary Footer Block -->
+      <div class="bg-slate-50/80 p-5 border-t border-slate-100">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Resumo Financeiro do Período</h4>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div class="bg-white p-3.5 rounded-xl border border-slate-200/60 shadow-2xs">
+            <span class="text-[11px] font-semibold text-slate-400">Entradas Realizadas</span>
+            <p class="text-base font-extrabold text-emerald-600 mt-0.5"><%= number_to_currency(@income_paid, unit: "R$", separator: ",", delimiter: ".") %></p>
+            <span class="text-[10px] text-slate-400">Pendentes: <%= number_to_currency(@income_unpaid, unit: "R$", separator: ",", delimiter: ".") %></span>
+          </div>
+          <div class="bg-white p-3.5 rounded-xl border border-slate-200/60 shadow-2xs">
+            <span class="text-[11px] font-semibold text-slate-400">Saídas Realizadas</span>
+            <p class="text-base font-extrabold text-rose-600 mt-0.5"><%= number_to_currency(@expense_paid, unit: "R$", separator: ",", delimiter: ".") %></p>
+            <span class="text-[10px] text-slate-400">Pendentes: <%= number_to_currency(@expense_unpaid, unit: "R$", separator: ",", delimiter: ".") %></span>
+          </div>
+          <div class="bg-white p-3.5 rounded-xl border border-slate-200/60 shadow-2xs">
+            <span class="text-[11px] font-semibold text-slate-400">Total Previsto (Entradas)</span>
+            <p class="text-base font-extrabold text-emerald-700 mt-0.5"><%= number_to_currency(@income_total, unit: "R$", separator: ",", delimiter: ".") %></p>
+            <span class="text-[10px] text-slate-400">Total Saídas: <%= number_to_currency(@expense_total, unit: "R$", separator: ",", delimiter: ".") %></span>
+          </div>
+          <div class="bg-white p-3.5 rounded-xl border border-slate-200/60 shadow-2xs">
+            <span class="text-[11px] font-semibold text-slate-400">Balanço do Mês</span>
+            <p class="text-base font-extrabold mt-0.5 <%= @month_balance >= 0 ? 'text-teal-600' : 'text-rose-600' %>">
+              <%= number_to_currency(@month_balance, unit: "R$", separator: ",", delimiter: ".") %>
+            </p>
+            <span class="text-[10px] <%= @month_balance >= 0 ? 'text-teal-600' : 'text-rose-600' %> font-medium">
+              <%= @month_balance >= 0 ? "Resultado positivo" : "Resultado negativo" %>
+            </span>
+          </div>
+          <div class="bg-white p-3.5 rounded-xl border border-slate-200/60 shadow-2xs">
+            <span class="text-[11px] font-semibold text-slate-400">Previsão de Saldo</span>
+            <p class="text-base font-extrabold mt-0.5 <%= @projected_balance >= 0 ? 'text-teal-700' : 'text-rose-600' %>">
+              <%= number_to_currency(@projected_balance, unit: "R$", separator: ",", delimiter: ".") %>
+            </p>
+            <span class="text-[10px] text-slate-400">
+              Após saídas pendentes
+            </span>
+          </div>
+        </div>
+      </div>
+    <% else %>
+      <div class="text-center py-16 px-4">
+        <span class="text-4xl block mb-2">📑</span>
+        <h3 class="text-base font-bold text-slate-800">Nenhuma movimentação encontrada</h3>
+        <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+          Não há lançamentos cadastrados para o período ou filtros selecionados.
+        </p>
+      </div>
+    <% end %>
+
+    <!-- Payment Modals for Credit Card Invoices -->
+    <div>
+      <% @items&.each do |item| %>
+        <% if item[:type] == 'invoice' %>
+          <% invoice = item[:object] %>
+          <% if !invoice.paid? %>
+            <div id="paymentModal_<%= invoice.id %>" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true">
+              <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+                <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" data-payment-target="closeButton" data-action="click->payment#closeModal"></div>
+                <div class="inline-block bg-white rounded-2xl text-left overflow-hidden shadow-elevated transform transition-all sm:my-8 sm:max-w-lg sm:w-full border border-slate-100 z-10">
+                  <div class="bg-white p-6">
+                    <h3 class="text-lg font-bold text-slate-900">Confirmar Pagamento da Fatura</h3>
+                    <p class="text-xs text-slate-500 mt-1">
+                      <strong><%= invoice.credit_card.name %></strong> • Fatura <%= invoice.reference_label %> • Vence em <%= invoice.due_date.strftime("%d/%m/%Y") %>
+                    </p>
+                    
+                    <%= form_with model: invoice, url: pay_credit_card_invoice_path(invoice.credit_card, invoice), method: :post, local: true, class: "mt-5 space-y-4", data: { "payment-target": "form" } do |form| %>
+                      <div>
+                        <label for="bank_account_id_<%= invoice.id %>" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Conta Bancária Débito</label>
+                        <select id="bank_account_id_<%= invoice.id %>" name="credit_card_invoice[bank_account_id]" class="form-select-custom text-xs" data-payment-target="select" data-action="change->payment#hideError">
+                          <option value="">Selecione uma conta bancária</option>
+                          <% current_user.bank_accounts.each do |account| %>
+                            <option value="<%= account.id %>" <% if account.id == invoice.credit_card.bank_account_id %> selected <% end %>>
+                              <%= account.name %> - <%= number_to_currency(account.balance, unit: "R$", separator: ",", delimiter: ".") %>
+                            </option>
+                          <% end %>
+                        </select>
+                      </div>
+
+                      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/60 flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-500">Valor da Fatura:</span>
+                        <span class="text-lg font-extrabold text-rose-600"><%= number_to_currency(invoice.total_amount, unit: "R$", separator: ",", delimiter: ".") %></span>
+                      </div>
+
+                      <div id="errorMessage_<%= invoice.id %>" class="rounded-xl bg-rose-50 p-3 hidden" data-payment-error>
+                        <p class="text-xs font-medium text-rose-800" id="errorText_<%= invoice.id %>" data-payment-error-text></p>
+                      </div>
+
+                      <div class="flex gap-3 pt-2">
+                        <button type="submit" class="flex-1 btn-success btn-md text-xs">
+                          Confirmar Pagamento
+                        </button>
+                        <button type="button" data-payment-target="closeButton" data-action="click->payment#closeModal" class="flex-1 btn-secondary btn-md text-xs">
+                          Cancelar
+                        </button>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="app-card px-4 py-3 flex items-center justify-between sm:px-6">
+    <%= paginate @transactions %>
+  </div>
+
+  <!-- Bank Accounts Quick Balances -->
+  <% if @bank_accounts.any? %>
+    <div>
+      <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Saldo das Contas</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-<%= [@bank_accounts.count, 4].min %> gap-4">
+        <% @bank_accounts.each do |account| %>
+          <div class="app-card p-4 app-card-hover">
+            <div class="flex items-center justify-between">
+              <p class="text-xs font-bold text-slate-600 truncate"><%= account.name %></p>
+              <% if account.color %>
+                <div class="w-2.5 h-2.5 rounded-full" style="background-color: <%= account.color %>"></div>
+              <% end %>
+            </div>
+            <p class="text-xl font-extrabold mt-1.5 <%= account.balance >= 0 ? 'text-slate-900' : 'text-rose-600' %>">
+              <%= account.formatted_balance %>
+            </p>
+            <p class="text-[11px] text-slate-400 mt-1"><%= account.account_type.titleize %> • <%= account.bank_name %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,95 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Categorias</h1>
+      <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Organize seus lançamentos por tipo de despesa ou receita</p>
+    </div>
+    <%= link_to new_category_path, class: "btn-primary btn-md gap-1.5 self-start sm:self-auto" do %>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+      <span>Nova Categoria</span>
+    <% end %>
+  </div>
+
+  <div class="app-card overflow-hidden">
+    <% if @categories.any? %>
+      <div class="overflow-x-auto">
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Nome & Ícone</th>
+              <th>Tipo</th>
+              <th>Cor Indicativa</th>
+              <th class="text-right w-16">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @categories.each do |category| %>
+              <tr>
+                <td>
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm shadow-2xs" style="background-color: <%= category.color.presence ? "#{category.color}20" : '#f1f5f9' %>; color: <%= category.color.presence || '#64748b' %>;">
+                      <%= category.icon.presence || "🏷️" %>
+                    </div>
+                    <span class="font-bold text-slate-900"><%= category.name %></span>
+                  </div>
+                </td>
+                <td>
+                  <% if category.transaction_type == 'income' %>
+                    <span class="badge badge-success">Receita</span>
+                  <% elsif category.transaction_type == 'investment' %>
+                    <span class="badge badge-primary">Investimento</span>
+                  <% elsif category.transaction_type == 'expense' %>
+                    <span class="badge badge-danger">Despesa</span>
+                  <% else %>
+                    <span class="badge badge-neutral"><%= category.transaction_type.titleize %></span>
+                  <% end %>
+                </td>
+                <td>
+                  <% if category.color %>
+                    <div class="flex items-center gap-2">
+                      <div class="w-4 h-4 rounded-full border border-black/10 shadow-2xs" style="background-color: <%= category.color %>"></div>
+                      <span class="text-xs font-mono text-slate-500"><%= category.color %></span>
+                    </div>
+                  <% else %>
+                    <span class="text-slate-300">-</span>
+                  <% end %>
+                </td>
+                <td class="text-right">
+                  <div class="relative inline-block text-left" data-controller="dropdown">
+                    <button type="button" class="action-menu-btn" data-dropdown-target="button" data-action="click->dropdown#toggle" title="Ações" aria-label="Menu de ações">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                      </svg>
+                    </button>
+
+                    <div data-dropdown-target="menu" class="hidden action-menu-dropdown">
+                      <%= link_to edit_category_path(category), class: "action-menu-item" do %>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <span>Editar</span>
+                      <% end %>
+                      <div class="action-menu-divider"></div>
+                      <%= link_to category, data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja apagar esta categoria?" }, class: "action-menu-item action-menu-item-danger" do %>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <span>Apagar</span>
+                      <% end %>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="text-center py-16 px-4">
+        <span class="text-4xl block mb-2">🏷️</span>
+        <h3 class="text-base font-bold text-slate-800">Nenhuma categoria cadastrada</h3>
+        <p class="text-xs text-slate-400 mt-1 mb-5 max-w-sm mx-auto">
+          Crie categorias para classificar suas contas e obter insights precisos sobre seus gastos.
+        </p>
+        <%= link_to "Criar Primeira Categoria", new_category_path, class: "btn-primary btn-md text-xs" %>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,111 @@
+<h1>Movimentações a Vencer</h1>
+
+<p>Olá <%= @user.name %>,</p>
+
+<p>Segue abaixo um resumo das movimentações a vencer de acordo com a data:</p>
+
+<% if @due_transactions[:overdue].any? %>
+  <h2 style="color: #dc2626;">Vencidas</h2>
+  <table border="1" cellpadding="10" style="width: 100%; border-collapse: collapse;">
+    <thead style="background-color: #fee2e2;">
+      <tr>
+        <th>Título</th>
+        <th>Valor</th>
+        <th>Data de Vencimento</th>
+        <th>Categoria</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @due_transactions[:overdue].each do |transaction| %>
+        <tr>
+          <td><%= transaction.title %></td>
+          <td><%= transaction.formatted_amount %></td>
+          <td><%= l(transaction.due_date, format: :long) %></td>
+          <td><%= transaction.category&.name || "Sem categoria" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
+
+<% if @due_transactions[:due_today].any? %>
+  <h2 style="color: #f59e0b; margin-top: 20px;">Vence Hoje</h2>
+  <table border="1" cellpadding="10" style="width: 100%; border-collapse: collapse;">
+    <thead style="background-color: #fef3c7;">
+      <tr>
+        <th>Título</th>
+        <th>Valor</th>
+        <th>Data de Vencimento</th>
+        <th>Categoria</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @due_transactions[:due_today].each do |transaction| %>
+        <tr>
+          <td><%= transaction.title %></td>
+          <td><%= transaction.formatted_amount %></td>
+          <td><%= l(transaction.due_date, format: :long) %></td>
+          <td><%= transaction.category&.name || "Sem categoria" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
+
+<% if @due_transactions[:due_in_3_days].any? %>
+  <h2 style="color: #3b82f6; margin-top: 20px;">Vence em 3 Dias</h2>
+  <table border="1" cellpadding="10" style="width: 100%; border-collapse: collapse;">
+    <thead style="background-color: #dbeafe;">
+      <tr>
+        <th>Título</th>
+        <th>Valor</th>
+        <th>Data de Vencimento</th>
+        <th>Categoria</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @due_transactions[:due_in_3_days].each do |transaction| %>
+        <tr>
+          <td><%= transaction.title %></td>
+          <td><%= transaction.formatted_amount %></td>
+          <td><%= l(transaction.due_date, format: :long) %></td>
+          <td><%= transaction.category&.name || "Sem categoria" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
+
+<% if @due_transactions[:due_in_5_days].any? %>
+  <h2 style="color: #10b981; margin-top: 20px;">Vence em 5 Dias</h2>
+  <table border="1" cellpadding="10" style="width: 100%; border-collapse: collapse;">
+    <thead style="background-color: #d1fae5;">
+      <tr>
+        <th>Título</th>
+        <th>Valor</th>
+        <th>Data de Vencimento</th>
+        <th>Categoria</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @due_transactions[:due_in_5_days].each do |transaction| %>
+        <tr>
+          <td><%= transaction.title %></td>
+          <td><%= transaction.formatted_amount %></td>
+          <td><%= l(transaction.due_date, format: :long) %></td>
+          <td><%= transaction.category&.name || "Sem categoria" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
+
+<% if @due_transactions.values.all? { |v| v.empty? } %>
+  <p style="color: #059669; font-size: 16px;">✓ Nenhuma movimentação a vencer nos próximos 5 dias!</p>
+<% end %>
+
+<hr style="margin: 30px 0;">
+
+<p>Acesse a plataforma para mais detalhes: <a href="<%= root_url %>">Finances</a></p>
+
+<p>Atenciosamente,<br>Seu Assistente de Finanças</p>

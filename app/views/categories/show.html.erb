@@ -1,0 +1,43 @@
+<div class="max-w-2xl mx-auto">
+  <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <span class="text-4xl"><%= @category.icon %></span>
+          <div>
+            <h2 class="text-2xl font-bold text-gray-900"><%= @category.name %></h2>
+            <p class="text-sm text-gray-500">
+              <%= t("transaction_types.#{@category.transaction_type}", default: @category.transaction_type) %>
+            </p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <%= link_to "Editar", edit_category_path(@category), class: "inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50" %>
+          <%= link_to "Excluir", @category, method: :delete, data: { confirm: "Tem certeza?" }, class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700" %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-6">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Cor</p>
+          <div class="flex items-center gap-2">
+            <div class="w-10 h-10 rounded border" style="background-color: <%= @category.color %>"></div>
+            <code class="text-sm text-gray-700"><%= @category.color %></code>
+          </div>
+        </div>
+
+        <% if @category.parent.present? %>
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Categoria Pai</p>
+            <p class="text-gray-900"><%= link_to @category.parent.name, category_path(@category.parent), class: "text-blue-600 hover:text-blue-800" %></p>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="border-t pt-6">
+        <p class="text-sm font-medium text-gray-700 mb-4">Transações associadas: <span class="font-bold"><%= @category.transactions.count %></span></p>
+        <%= link_to "Voltar para categorias", categories_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50" %>
+      </div>
+    </div>
+  </div>
+</div>

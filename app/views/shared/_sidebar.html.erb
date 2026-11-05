@@ -1,0 +1,171 @@
+<!-- Mobile Sidebar - Backdrop -->
+<div 
+  data-mobile-sidebar-target="backdrop"
+  class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden transition-opacity"
+  data-action="click->mobile-sidebar#closeOnBackdrop"
+></div>
+
+<!-- Sidebar Drawer -->
+<aside 
+  data-mobile-sidebar-target="sidebar"
+  class="fixed inset-y-0 left-0 w-64 flex-shrink-0 bg-white border-r border-slate-200/80 shadow-xl md:shadow-none transform -translate-x-full transition-transform duration-300 ease-in-out z-50 md:static md:h-full md:translate-x-0 md:z-0 flex flex-col justify-between"
+  data-controller="submenu"
+>
+  <div class="overflow-y-auto flex-1 py-4 px-3 space-y-5">
+    
+    <!-- Mobile header inside drawer -->
+    <div class="md:hidden flex items-center justify-between pb-3 px-1 border-b border-slate-100 mb-2">
+      <div class="flex items-center gap-2">
+        <span class="w-7 h-7 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xs">⚡</span>
+        <span class="font-bold text-slate-800 text-sm">Menu Finances</span>
+      </div>
+      <button 
+        type="button" 
+        data-action="click->mobile-sidebar#toggle"
+        class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Group: Visão Geral -->
+    <div class="space-y-1">
+      <p class="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase">Visão Geral</p>
+      
+      <%= link_to authenticated_root_path, class: "group flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl transition #{current_page?(authenticated_root_path) ? 'bg-brand-50 text-brand-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}" do %>
+        <svg class="w-5 h-5 <%= current_page?(authenticated_root_path) ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-600' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+        </svg>
+        <span>Dashboard</span>
+      <% end %>
+
+      <%= link_to reports_path, class: "group flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl transition #{request.path.start_with?('/reports') ? 'bg-brand-50 text-brand-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}" do %>
+        <svg class="w-5 h-5 <%= request.path.start_with?('/reports') ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-600' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        <span>Relatórios & Previsões</span>
+      <% end %>
+
+      <%= link_to financial_insights_path, class: "group flex items-center justify-between px-3 py-2 text-sm font-semibold rounded-xl transition #{request.path.start_with?('/financial_insights') ? 'bg-gradient-to-r from-brand-50 to-purple-50 text-brand-700 border border-brand-200/50 shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}" do %>
+        <div class="flex items-center gap-3">
+          <svg class="w-5 h-5 <%= request.path.start_with?('/financial_insights') ? 'text-brand-600' : 'text-slate-400 group-hover:text-brand-500' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>Consultoria IA</span>
+        </div>
+        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-gradient-to-r from-brand-600 to-purple-600 text-white shadow-2xs">IA</span>
+      <% end %>
+    </div>
+
+    <!-- Group: Gestão Financeira -->
+    <% banking_active = request.path.start_with?('/bank_accounts', '/transactions') %>
+    <div class="space-y-1">
+      <p class="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase">Gestão Financeira</p>
+      
+      <!-- Submenu: Bancário -->
+      <div>
+        <button 
+          type="button" 
+          class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold rounded-xl text-slate-700 hover:bg-slate-50 transition group" 
+          data-submenu-target="toggleButton" 
+          data-target="banking-menu" 
+          data-action="click->submenu#toggle"
+        >
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-slate-400 group-hover:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+            <span>Bancário</span>
+          </div>
+          <svg class="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        
+        <div id="banking-menu" class="<%= banking_active ? '' : 'hidden' %> pl-8 pr-1 py-1 space-y-1 border-l-2 border-slate-100 ml-4">
+          <%= link_to "Contas Bancárias", bank_accounts_path, class: "block px-2.5 py-1.5 text-xs font-semibold rounded-lg transition #{current_page?(bank_accounts_path) ? 'bg-brand-50 text-brand-700 font-bold' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}" %>
+          <%= link_to "Movimentações", transactions_path, class: "block px-2.5 py-1.5 text-xs font-semibold rounded-lg transition #{current_page?(transactions_path) ? 'bg-brand-50 text-brand-700 font-bold' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}" %>
+          <%= link_to new_transaction_import_path, class: "flex items-center justify-between px-2.5 py-1.5 text-xs font-semibold rounded-lg transition #{request.path.start_with?('/transactions/import') ? 'bg-brand-50 text-brand-700 font-bold' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}" do %>
+            <span>Importar Extrato</span>
+            <span class="text-[9px] font-bold px-1 py-0.2 rounded bg-brand-100 text-brand-800">IA</span>
+          <% end %>
+          <%= link_to "Nova Movimentação", new_transaction_path, class: "block px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition" %>
+        </div>
+      </div>
+
+      <!-- Submenu: Cartões de Crédito -->
+      <% cards_active = request.path.start_with?('/credit_cards') %>
+      <div>
+        <button 
+          type="button" 
+          class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold rounded-xl text-slate-700 hover:bg-slate-50 transition group" 
+          data-submenu-target="toggleButton" 
+          data-target="credit-cards-menu" 
+          data-action="click->submenu#toggle"
+        >
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-slate-400 group-hover:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+            <span>Cartões de Crédito</span>
+          </div>
+          <svg class="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        
+        <div id="credit-cards-menu" class="<%= cards_active ? '' : 'hidden' %> pl-8 pr-1 py-1 space-y-1 border-l-2 border-slate-100 ml-4">
+          <%= link_to "Meus Cartões", credit_cards_path, class: "block px-2.5 py-1.5 text-xs font-semibold rounded-lg transition #{current_page?(credit_cards_path) ? 'bg-brand-50 text-brand-700 font-bold' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}" %>
+          <%= link_to "Novo Cartão", new_credit_card_path, class: "block px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Group: Configurações -->
+    <% config_active = request.path.start_with?('/categories', '/recurrences', '/settings') %>
+    <div class="space-y-1">
+      <p class="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase">Configurações</p>
+      
+      <div>
+        <button 
+          type="button" 
+          class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold rounded-xl text-slate-700 hover:bg-slate-50 transition group" 
+          data-submenu-target="toggleButton" 
+          data-target="config-menu" 
+          data-action="click->submenu#toggle"
+        >
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-slate-400 group-hover:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span>Sistema</span>
+          </div>
+          <svg class="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        
+        <div id="config-menu" class="<%= config_active ? '' : 'hidden' %> pl-8 pr-1 py-1 space-y-1 border-l-2 border-slate-100 ml-4">
+          <%= link_to "Categorias", categories_path, class: "block px-2.5 py-1.5 text-xs font-semibold rounded-lg transition #{current_page?(categories_path) ? 'bg-brand-50 text-brand-700 font-bold' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}" %>
+          <%= link_to "Recorrências", recurrences_path, class: "block px-2.5 py-1.5 text-xs font-semibold rounded-lg transition #{current_page?(recurrences_path) ? 'bg-brand-50 text-brand-700 font-bold' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}" %>
+          <%= link_to "Provedor de IA", ai_settings_path, class: "block px-2.5 py-1.5 text-xs font-semibold rounded-lg transition #{request.path.start_with?('/settings/ai') ? 'bg-brand-50 text-brand-700 font-bold' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}" %>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sidebar Footer Mini Card -->
+  <div class="p-3 border-t border-slate-100">
+    <div class="rounded-xl bg-gradient-to-br from-slate-50 to-slate-100/80 border border-slate-200/80 p-3">
+      <div class="flex items-center gap-2">
+        <span class="text-xs">💡</span>
+        <span class="text-xs font-bold text-slate-800">IA Integrada</span>
+      </div>
+      <p class="text-[11px] text-slate-500 mt-1 leading-snug">
+        Economize tempo importando extratos e analisando custos automaticamente.
+      </p>
+    </div>
+  </div>
+</aside>

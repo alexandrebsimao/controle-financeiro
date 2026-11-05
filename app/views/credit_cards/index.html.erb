@@ -1,0 +1,113 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Cartões de Crédito</h1>
+      <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Gerencie limites, faturas e lançamentos dos seus cartões</p>
+    </div>
+    <%= link_to new_credit_card_path, class: "btn-primary btn-md gap-1.5 self-start sm:self-auto" do %>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+      <span>Novo Cartão</span>
+    <% end %>
+  </div>
+
+  <!-- Cards Grid -->
+  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <% @credit_cards.each do |card| %>
+      <% card_bg_color = card.color.presence || '#334155' %>
+      <div class="app-card overflow-hidden app-card-hover flex flex-col justify-between">
+        
+        <!-- Virtual Card Representation -->
+        <div class="p-5">
+          <div class="credit-card-preview relative" style="background: linear-gradient(135deg, <%= card_bg_color %> 0%, #0f172a 100%);">
+            <div class="absolute -right-8 -bottom-8 w-36 h-36 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
+            
+            <!-- Top Card Row -->
+            <div class="flex justify-between items-start relative z-10">
+              <div class="credit-card-chip"></div>
+              <span class="text-xs font-black tracking-widest uppercase opacity-80">
+                <%= card.brand.presence || "CREDIT" %>
+              </span>
+            </div>
+
+            <!-- Middle Card Row -->
+            <div class="my-4 relative z-10">
+              <p class="text-[10px] uppercase font-bold tracking-wider text-white/70">Limite Total</p>
+              <p class="text-xl sm:text-2xl font-black text-white tracking-tight">
+                <%= number_to_currency(card.credit_limit || 0, unit: "R$", separator: ",", delimiter: ".") %>
+              </p>
+            </div>
+
+            <!-- Bottom Card Row -->
+            <div class="flex justify-between items-end relative z-10">
+              <div>
+                <p class="text-[10px] uppercase font-bold tracking-wider text-white/70">Titular / Cartão</p>
+                <p class="text-sm font-bold tracking-wide text-white truncate max-w-[150px]"><%= card.name %></p>
+              </div>
+              <div class="text-right">
+                <span class="text-[9px] uppercase font-bold tracking-wider text-white/70 block">Vencimento</span>
+                <span class="text-xs font-extrabold text-white">Dia <%= card.due_day %>º</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card Metadata -->
+          <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Fechamento</span>
+              <span class="font-bold text-slate-800">Dia <%= card.closing_day %>º do mês</span>
+            </div>
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Vencimento</span>
+              <span class="font-bold text-slate-800">Dia <%= card.due_day %>º do mês</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Footer -->
+        <div class="bg-slate-50/70 px-5 py-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold gap-2">
+          <%= link_to "Ver Faturas →", card, class: "text-brand-600 hover:text-brand-800 transition" %>
+          
+          <div class="relative inline-block text-left" data-controller="dropdown">
+            <button type="button" class="action-menu-btn" data-dropdown-target="button" data-action="click->dropdown#toggle" title="Ações" aria-label="Menu de ações">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
+
+            <div data-dropdown-target="menu" class="hidden action-menu-dropdown">
+              <%= link_to card, class: "action-menu-item" do %>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span>Ver Faturas</span>
+              <% end %>
+              <%= link_to new_credit_card_purchase_path(card), class: "action-menu-item" do %>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>Nova Compra</span>
+              <% end %>
+              <%= link_to edit_credit_card_path(card), class: "action-menu-item" do %>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <span>Editar</span>
+              <% end %>
+              <div class="action-menu-divider"></div>
+              <%= link_to card, data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja apagar este cartão?" }, class: "action-menu-item action-menu-item-danger" do %>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                <span>Apagar</span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @credit_cards.empty? %>
+    <div class="app-card text-center py-16 px-4">
+      <span class="text-4xl block mb-2">💳</span>
+      <h3 class="text-base font-bold text-slate-800">Nenhum cartão de crédito cadastrado</h3>
+      <p class="text-xs text-slate-400 mt-1 mb-5 max-w-sm mx-auto">
+        Cadastre seus cartões de crédito para acompanhar faturas e controlar compras parceladas.
+      </p>
+      <%= link_to "Criar Primeiro Cartão", new_credit_card_path, class: "btn-primary btn-md text-xs" %>
+    </div>
+  <% end %>
+</div>

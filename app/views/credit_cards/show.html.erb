@@ -1,0 +1,255 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight"><%= @credit_card.name %></h1>
+        <span class="badge badge-purple uppercase text-[10px]"><%= @credit_card.brand.presence || "Cartão" %></span>
+      </div>
+      <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+        Limite: <strong><%= number_to_currency(@credit_card.credit_limit || 0, unit: "R$", separator: ",", delimiter: ".") %></strong> • 
+        Fechamento dia <strong><%= @credit_card.closing_day %>º</strong> • 
+        Vencimento dia <strong><%= @credit_card.due_day %>º</strong>
+      </p>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <%= link_to edit_credit_card_path(@credit_card), class: "btn-secondary btn-md text-xs" do %>
+        Editar Cartão
+      <% end %>
+      <%= link_to new_credit_card_purchase_path(@credit_card), class: "btn-primary btn-md text-xs gap-1" do %>
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+        <span>Nova Compra</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="app-card overflow-hidden" data-controller="tabs">
+    <div class="border-b border-slate-100 bg-slate-50/50 px-4">
+      <nav class="flex space-x-6" aria-label="Tabs">
+        <a href="#invoices" class="border-b-2 border-brand-600 py-3.5 px-2 inline-flex items-center text-xs font-bold text-brand-700 transition" data-tabs-target="tabButton" data-tab="invoices" data-action="click->tabs#showTab">
+          📑 Faturas (<%= @invoices.count %>)
+        </a>
+        <a href="#purchases" class="border-b-2 border-transparent py-3.5 px-2 inline-flex items-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition" data-tabs-target="tabButton" data-tab="purchases" data-action="click->tabs#showTab">
+          🛍️ Compras & Lançamentos (<%= @purchases.count %>)
+        </a>
+      </nav>
+    </div>
+
+    <!-- Invoices Tab -->
+    <div id="invoices" class="tab-content" data-tabs-target="tab" data-controller="payment">
+      <div class="overflow-x-auto">
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Período da Fatura</th>
+              <th>Fechamento</th>
+              <th>Vencimento</th>
+              <th>Valor Total</th>
+              <th>Status</th>
+              <th class="text-right w-16">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if @invoices.any? %>
+              <% @invoices.each do |invoice| %>
+                <tr>
+                  <td>
+                    <div class="font-bold text-slate-900">
+                      <%= link_to "Fatura #{invoice.reference_label}", credit_card_invoice_path(@credit_card, invoice), class: "hover:text-brand-600 transition" %>
+                    </div>
+                  </td>
+                  <td class="text-xs text-slate-600">
+                    <%= invoice.closing_date.strftime("%d/%m/%Y") %>
+                  </td>
+                  <td class="text-xs text-slate-600">
+                    <%= invoice.due_date.strftime("%d/%m/%Y") %>
+                  </td>
+                  <td class="font-bold whitespace-nowrap text-slate-900">
+                    <%= number_to_currency(invoice.total_amount, unit: "R$", separator: ",", delimiter: ".") %>
+                  </td>
+                  <td>
+                    <% if invoice.overdue? %>
+                      <span class="badge badge-danger">Atrasado</span>
+                    <% elsif invoice.paid? %>
+                      <span class="badge badge-success">Pago</span>
+                    <% else %>
+                      <span class="badge badge-warning">Pendente</span>
+                    <% end %>
+                  </td>
+                  <td class="text-right">
+                    <div class="relative inline-block text-left" data-controller="dropdown">
+                      <button type="button" class="action-menu-btn" data-dropdown-target="button" data-action="click->dropdown#toggle" title="Ações" aria-label="Menu de ações">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                      </button>
+
+                      <div data-dropdown-target="menu" class="hidden action-menu-dropdown">
+                        <%= link_to credit_card_invoice_path(@credit_card, invoice), class: "action-menu-item" do %>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                          <span>Ver Detalhes</span>
+                        <% end %>
+                        <% if !invoice.paid? %>
+                          <button type="button" class="action-menu-item action-menu-item-success" data-payment-target="toggleButton" data-modal-id="paymentModal_<%= invoice.id %>" data-action="click->payment#openModal">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <span>Pagar Fatura</span>
+                          </button>
+                        <% end %>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr>
+                <td colspan="6" class="text-center py-12 text-slate-400 text-xs">
+                  Nenhuma fatura gerada para este cartão ainda.
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Payment Modals for Invoices -->
+      <div>
+        <% @invoices.each do |invoice| %>
+          <% if !invoice.paid? %>
+            <div id="paymentModal_<%= invoice.id %>" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true">
+              <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+                <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" data-payment-target="closeButton" data-action="click->payment#closeModal"></div>
+                <div class="inline-block bg-white rounded-2xl text-left overflow-hidden shadow-elevated transform transition-all sm:my-8 sm:max-w-lg sm:w-full border border-slate-100 z-10">
+                  <div class="p-6">
+                    <h3 class="text-lg font-bold text-slate-900">Confirmar Pagamento da Fatura</h3>
+                    <p class="text-xs text-slate-500 mt-1">
+                      <strong>Fatura <%= invoice.reference_label %></strong> • Vencimento: <%= invoice.due_date.strftime("%d/%m/%Y") %>
+                    </p>
+                    
+                    <%= form_with model: invoice, url: pay_credit_card_invoice_path(@credit_card, invoice), method: :post, local: true, class: "mt-5 space-y-4", data: { "payment-target": "form" } do |form| %>
+                      <div>
+                        <label for="bank_account_id_<%= invoice.id %>" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Conta Bancária Débito</label>
+                        <select id="bank_account_id_<%= invoice.id %>" name="credit_card_invoice[bank_account_id]" class="form-select-custom text-xs" data-payment-target="select" data-action="change->payment#hideError">
+                          <option value="">Selecione uma conta bancária</option>
+                          <% current_user.bank_accounts.each do |account| %>
+                            <option value="<%= account.id %>" <% if account.id == @credit_card.bank_account_id %> selected <% end %>>
+                              <%= account.name %> - <%= number_to_currency(account.balance, unit: "R$", separator: ",", delimiter: ".") %>
+                            </option>
+                          <% end %>
+                        </select>
+                      </div>
+
+                      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/60 flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-500">Valor da Fatura:</span>
+                        <span class="text-lg font-extrabold text-rose-600"><%= number_to_currency(invoice.total_amount, unit: "R$", separator: ",", delimiter: ".") %></span>
+                      </div>
+
+                      <div id="errorMessage_<%= invoice.id %>" class="rounded-xl bg-rose-50 p-3 hidden" data-payment-error>
+                        <p class="text-xs font-medium text-rose-800" id="errorText_<%= invoice.id %>" data-payment-error-text></p>
+                      </div>
+
+                      <div class="flex gap-3 pt-2">
+                        <button type="submit" class="flex-1 btn-success btn-md text-xs">
+                          Confirmar Pagamento
+                        </button>
+                        <button type="button" data-payment-target="closeButton" data-action="click->payment#closeModal" class="flex-1 btn-secondary btn-md text-xs">
+                          Cancelar
+                        </button>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Purchases Tab -->
+    <div id="purchases" class="tab-content hidden" data-tabs-target="tab">
+      <% if @purchases.any? %>
+        <div class="overflow-x-auto">
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th>Descrição da Compra</th>
+                <th>Categoria</th>
+                <th>Data</th>
+                <th>Valor Total</th>
+                <th>Parcelas</th>
+                <th class="text-right w-16">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @purchases.each do |purchase| %>
+                <tr>
+                  <td>
+                    <div class="font-bold text-slate-900">
+                      <%= link_to purchase.title, credit_card_purchase_path(@credit_card, purchase), class: "hover:text-brand-600 transition" %>
+                    </div>
+                  </td>
+                  <td>
+                    <% if purchase.category %>
+                      <span class="font-medium text-slate-700 text-xs"><%= purchase.category.name %></span>
+                    <% else %>
+                      <span class="text-slate-300 text-xs">-</span>
+                    <% end %>
+                  </td>
+                  <td class="text-xs text-slate-600">
+                    <%= purchase.purchased_at.strftime("%d/%m/%Y") %>
+                  </td>
+                  <td class="font-bold whitespace-nowrap text-rose-600">
+                    <%= number_to_currency(purchase.total_amount, unit: "R$", separator: ",", delimiter: ".") %>
+                  </td>
+                  <td class="text-xs text-slate-600">
+                    <% if purchase.installments > 1 %>
+                      <span class="badge badge-neutral"><%= "#{purchase.installments}x de #{number_to_currency(purchase.installment_amount, unit: 'R$', separator: ',', delimiter: '.')}" %></span>
+                    <% else %>
+                      <span class="badge badge-neutral">À vista</span>
+                    <% end %>
+                  </td>
+                  <td class="text-right">
+                    <div class="relative inline-block text-left" data-controller="dropdown">
+                      <button type="button" class="action-menu-btn" data-dropdown-target="button" data-action="click->dropdown#toggle" title="Ações" aria-label="Menu de ações">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                      </button>
+
+                      <div data-dropdown-target="menu" class="hidden action-menu-dropdown">
+                        <%= link_to credit_card_purchase_path(@credit_card, purchase), class: "action-menu-item" do %>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                          <span>Ver detalhes</span>
+                        <% end %>
+                        <%= link_to edit_credit_card_purchase_path(@credit_card, purchase), class: "action-menu-item" do %>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                          <span>Editar</span>
+                        <% end %>
+                        <div class="action-menu-divider"></div>
+                        <%= button_to credit_card_purchase_path(@credit_card, purchase), method: :delete, data: { turbo_confirm: "Tem certeza que deseja excluir esta compra e suas parcelas?" }, class: "action-menu-item action-menu-item-danger" do %>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                          <span>Apagar</span>
+                        <% end %>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-16 px-4">
+          <span class="text-4xl block mb-2">🛍️</span>
+          <h3 class="text-base font-bold text-slate-800">Nenhuma compra registrada neste cartão</h3>
+          <p class="text-xs text-slate-400 mt-1 mb-5 max-w-sm mx-auto">
+            Adicione compras ou importações para acompanhar suas parcelas.
+          </p>
+          <%= link_to "Registrar Compra", new_credit_card_purchase_path(@credit_card), class: "btn-primary btn-md text-xs" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

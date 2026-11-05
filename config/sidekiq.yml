@@ -1,0 +1,19 @@
+---
+:concurrency: 5
+:timeout: 25
+:verbose: true
+
+:queues:
+  - default
+  - active_job
+
+:scheduler:
+  :schedule:
+    generate_recurrences:
+      cron: '0 0 * * * America/Sao_Paulo'
+      class: GenerateRecurrencesJob
+      description: 'Generate future transactions for active recurrences'
+    due_transactions_notification:
+      cron: '0 0 * * * America/Sao_Paulo'
+      class: DueTransactionsNotificationJob
+      description: 'Send email notifications for due transactions'

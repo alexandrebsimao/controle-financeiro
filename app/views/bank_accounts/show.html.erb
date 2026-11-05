@@ -1,0 +1,157 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+    <div>
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white text-base shadow-2xs" style="background-color: <%= @bank_account.color.presence || '#6366f1' %>;">
+          <%= @bank_account.name.to_s.first&.upcase || "🏦" %>
+        </div>
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight"><%= @bank_account.name %></h1>
+          <p class="text-xs sm:text-sm text-slate-500"><%= @bank_account.bank_name %> • <%= @bank_account.account_type.titleize %></p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <%= link_to "← Contas", bank_accounts_path, class: "btn-secondary btn-md text-xs" %>
+      <%= link_to "Editar Conta", edit_bank_account_path(@bank_account), class: "btn-secondary btn-md text-xs" %>
+      <%= link_to new_transaction_path(bank_account_id: @bank_account.id), class: "btn-primary btn-md text-xs gap-1" do %>
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+        <span>Nova Movimentação</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Account Summary Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="app-card p-5">
+      <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Saldo Atual</span>
+      <p class="text-2xl font-extrabold mt-1 <%= @bank_account.balance >= 0 ? 'text-slate-900' : 'text-rose-600' %>">
+        <%= number_to_currency(@bank_account.balance, unit: "R$", separator: ",", delimiter: ".") %>
+      </p>
+    </div>
+
+    <div class="app-card p-5">
+      <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Moeda & Status</span>
+      <p class="text-xl font-bold mt-1 text-slate-800">
+        <%= @bank_account.currency %> • 
+        <% if @bank_account.active? %>
+          <span class="badge badge-success">Ativa</span>
+        <% else %>
+          <span class="badge badge-neutral">Inativa</span>
+        <% end %>
+      </p>
+    </div>
+
+    <div class="app-card p-5">
+      <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total de Movimentações</span>
+      <p class="text-2xl font-extrabold mt-1 text-slate-900">
+        <%= @bank_account.transactions.count %>
+      </p>
+    </div>
+  </div>
+
+  <!-- Transactions Table -->
+  <div class="app-card overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <h3 class="text-sm sm:text-base font-bold text-slate-900">Últimas Movimentações desta Conta</h3>
+      <%= link_to "+ Nova Movimentação", new_transaction_path(bank_account_id: @bank_account.id), class: "text-xs font-bold text-brand-600 hover:text-brand-800" %>
+    </div>
+
+    <% if @transactions.any? %>
+      <div class="overflow-x-auto">
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Categoria</th>
+              <th>Data</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th class="text-right w-16">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @transactions.each do |transaction| %>
+              <tr>
+                <td>
+                  <div class="font-bold text-slate-900">
+                    <%= link_to transaction.title, transaction, class: "hover:text-brand-600 transition" %>
+                  </div>
+                </td>
+                <td>
+                  <% if transaction.category %>
+                    <span class="font-medium text-slate-700 text-xs"><%= transaction.category.name %></span>
+                  <% else %>
+                    <span class="text-slate-300 text-xs">-</span>
+                  <% end %>
+                </td>
+                <td class="text-xs text-slate-600">
+                  <%= transaction.due_date.strftime("%d/%m/%Y") %>
+                </td>
+                <td class="font-bold whitespace-nowrap <%= transaction.income? ? 'text-emerald-600' : 'text-rose-600' %>">
+                  <%= transaction.income? ? '+' : '-' %><%= number_to_currency(transaction.amount, unit: "R$", separator: ",", delimiter: ".") %>
+                </td>
+                <td>
+                  <% if transaction.overdue? %>
+                    <span class="badge badge-danger">Atrasado</span>
+                  <% elsif transaction.paid? %>
+                    <span class="badge badge-success">Pago</span>
+                  <% else %>
+                    <span class="badge badge-warning">Pendente</span>
+                  <% end %>
+                </td>
+                <td class="text-right">
+                  <div class="relative inline-block text-left" data-controller="dropdown">
+                    <button type="button" class="action-menu-btn" data-dropdown-target="button" data-action="click->dropdown#toggle" title="Ações" aria-label="Menu de ações">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                      </svg>
+                    </button>
+
+                    <div data-dropdown-target="menu" class="hidden action-menu-dropdown">
+                      <%= link_to transaction, class: "action-menu-item" do %>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span>Ver detalhes</span>
+                      <% end %>
+                      <%= link_to edit_transaction_path(transaction), class: "action-menu-item" do %>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <span>Editar</span>
+                      <% end %>
+                      <% if !transaction.paid? %>
+                        <%= link_to mark_paid_transaction_path(transaction), method: :patch, data: { turbo_method: :patch }, class: "action-menu-item action-menu-item-success" do %>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                          <span>Marcar Pago</span>
+                        <% end %>
+                      <% end %>
+                      <div class="action-menu-divider"></div>
+                      <%= link_to transaction, data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja apagar esta movimentação?" }, class: "action-menu-item action-menu-item-danger" do %>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <span>Apagar</span>
+                      <% end %>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+        <%= paginate @transactions %>
+      </div>
+    <% else %>
+      <div class="text-center py-16 px-4">
+        <span class="text-4xl block mb-2">📑</span>
+        <h3 class="text-base font-bold text-slate-800">Nenhuma movimentação registrada nesta conta</h3>
+        <p class="text-xs text-slate-400 mt-1 mb-5 max-w-sm mx-auto">
+          Adicione entradas ou despesas vinculadas a esta conta bancária.
+        </p>
+        <%= link_to "Criar Movimentação", new_transaction_path(bank_account_id: @bank_account.id), class: "btn-primary btn-md text-xs" %>
+      </div>
+    <% end %>
+  </div>
+</div>

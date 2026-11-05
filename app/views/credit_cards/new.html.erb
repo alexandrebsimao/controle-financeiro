@@ -1,0 +1,66 @@
+<div class="max-w-2xl mx-auto space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Novo Cartão de Crédito</h1>
+      <p class="text-xs text-slate-500 mt-0.5">Cadastre um cartão para gerenciar faturas e datas de fechamento</p>
+    </div>
+    <%= link_to "← Voltar", credit_cards_path, class: "text-xs font-semibold text-slate-500 hover:text-slate-800" %>
+  </div>
+
+  <div class="app-card p-6 sm:p-8">
+    <%= form_with model: @credit_card, local: true, class: "space-y-6" do |f| %>
+      <% if @credit_card.errors.any? %>
+        <div class="rounded-2xl bg-rose-50 border border-rose-200/80 p-4">
+          <h3 class="text-xs font-bold text-rose-800 uppercase tracking-wider"><%= pluralize(@credit_card.errors.count, "erro") %> encontrado(s):</h3>
+          <ul class="mt-2 list-disc list-inside text-xs text-rose-700 space-y-0.5">
+            <% @credit_card.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <%= f.label :name, "Nome do Cartão", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.text_field :name, placeholder: "Ex: Nubank Ultravioleta, C6 Carbon...", required: true, class: "form-input-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :brand, "Bandeira", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.select :brand, CreditCard::BRANDS.map { |b| [b.titleize, b] }, { prompt: "Selecione a bandeira" }, class: "form-select-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :bank_account_id, "Conta para Débito Padrão", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.select :bank_account_id, @bank_accounts.map { |ba| [ba.name, ba.id] }, { prompt: "Selecione uma conta" }, required: true, class: "form-select-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :credit_limit, "Limite de Crédito (R$)", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.number_field :credit_limit, step: 0.01, placeholder: "0,00", class: "form-input-custom font-semibold text-slate-900" %>
+        </div>
+
+        <div>
+          <%= f.label :closing_day, "Dia do Fechamento (Fatura)", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.number_field :closing_day, min: 1, max: 31, placeholder: "Ex: 10", required: true, class: "form-input-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :due_day, "Dia do Vencimento (Pagamento)", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.number_field :due_day, min: 1, max: 31, placeholder: "Ex: 17", required: true, class: "form-input-custom" %>
+        </div>
+
+        <div class="sm:col-span-2">
+          <%= f.label :color, "Cor do Cartão (Gradiente Visual)", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.color_field :color, class: "w-full h-10 p-1 rounded-xl border border-slate-300 cursor-pointer" %>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 pt-3 border-t border-slate-100">
+        <%= f.submit "Cadastrar Cartão", class: "btn-primary btn-md text-xs" %>
+        <%= link_to "Cancelar", credit_cards_path, class: "btn-secondary btn-md text-xs" %>
+      </div>
+    <% end %>
+  </div>
+</div>

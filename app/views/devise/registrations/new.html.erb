@@ -1,0 +1,61 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-brand-50/40 to-slate-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="w-full max-w-md">
+    
+    <!-- Logo & Brand Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-700 via-brand-600 to-indigo-500 text-white font-extrabold text-2xl shadow-lg shadow-brand-500/25 mb-3">
+        ⚡
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Finances</h1>
+      <p class="text-xs sm:text-sm text-slate-500 mt-1">Crie sua conta para começar a gerenciar suas finanças</p>
+    </div>
+
+    <!-- Register Card -->
+    <div class="bg-white rounded-3xl shadow-elevated border border-slate-100/80 p-8 sm:p-10">
+      <h2 class="text-lg font-bold text-slate-900 mb-6 text-center">Criar uma Nova Conta</h2>
+
+      <%= render "devise/shared/error_messages", resource: resource %>
+
+      <%= form_for(resource, as: resource_name, url: registration_path(resource_name), local: true) do |f| %>
+        <div class="space-y-4">
+          <div>
+            <%= f.label :name, "Nome Completo", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+            <%= f.text_field :name, autofocus: true, autocomplete: "name", placeholder: "Ex: Alexandre Simão", class: "form-input-custom" %>
+          </div>
+
+          <div>
+            <%= f.label :email, "Email", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+            <%= f.email_field :email, autocomplete: "email", placeholder: "seu@email.com", class: "form-input-custom" %>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <%= f.label :password, "Senha", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider" %>
+              <% if @minimum_password_length %>
+                <span class="text-[11px] text-slate-400">Mín. <%= @minimum_password_length %> caracteres</span>
+              <% end %>
+            </div>
+            <%= f.password_field :password, autocomplete: "new-password", placeholder: "••••••••", class: "form-input-custom" %>
+          </div>
+
+          <div>
+            <%= f.label :password_confirmation, "Confirmar Senha", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+            <%= f.password_field :password_confirmation, autocomplete: "new-password", placeholder: "••••••••", class: "form-input-custom" %>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full mt-6 btn-primary py-3 text-sm font-bold shadow-md hover:shadow-lg transition">
+          Criar Minha Conta
+        </button>
+      <% end %>
+
+      <div class="mt-8 border-t border-slate-100 pt-6 text-center">
+        <p class="text-xs text-slate-500">
+          Já tem uma conta cadastrada?
+          <%= link_to "Fazer Login", new_session_path(resource_name), class: "font-bold text-brand-600 hover:text-brand-800 transition ml-1" %>
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>

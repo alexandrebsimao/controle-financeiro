@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+  <head>
+    <meta charset="utf-8">
+    <title><%= content_for(:title) || "Finances • Gestão Financeira Inteligente" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="application-name" content="Finances">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4f46e5">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+            },
+            colors: {
+              brand: {
+                50: '#eef2ff',
+                100: '#e0e7ff',
+                200: '#c7d2fe',
+                300: '#a5b4fc',
+                400: '#818cf8',
+                500: '#6366f1',
+                600: '#4f46e5',
+                700: '#4338ca',
+                800: '#3730a3',
+                900: '#312e81',
+                950: '#1e1b4b',
+              }
+            },
+            boxShadow: {
+              'card': '0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04)',
+              'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.04)',
+              'elevated': '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04)',
+            }
+          }
+        }
+      }
+    </script>
+
+    <%= stylesheet_link_tag :application, "data-turbo-track": "reload" %>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  </head>
+
+  <body class="bg-slate-50 text-slate-800 <%= user_signed_in? ? 'h-screen overflow-hidden' : 'min-h-full' %> font-sans antialiased selection:bg-brand-500 selection:text-white">
+    <% if user_signed_in? %>
+      <div class="h-screen overflow-hidden flex flex-col" data-controller="mobile-sidebar" data-action="keydown@window->mobile-sidebar#closeOnKeydown">
+        <%= render "shared/navbar" %>
+        
+        <div class="flex-1 flex overflow-hidden min-h-0">
+          <%= render "shared/sidebar" %>
+          
+          <main class="flex-1 overflow-y-auto bg-slate-50/60 pb-16">
+            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+              
+              <!-- Flash Messages -->
+              <% if notice.present? %>
+                <div class="mb-6 rounded-2xl bg-emerald-50/90 border border-emerald-200/80 p-4 shadow-sm backdrop-blur-xs flex items-center justify-between gap-3 animate-fade-in">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0 text-emerald-600">
+                      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                    <p class="text-sm font-semibold text-emerald-900"><%= notice %></p>
+                  </div>
+                  <button type="button" onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700 p-1 rounded-lg hover:bg-emerald-100/50 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              <% end %>
+              
+              <% if alert.present? %>
+                <div class="mb-6 rounded-2xl bg-rose-50/90 border border-rose-200/80 p-4 shadow-sm backdrop-blur-xs flex items-center justify-between gap-3 animate-fade-in">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-rose-500/10 flex items-center justify-center flex-shrink-0 text-rose-600">
+                      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                    <p class="text-sm font-semibold text-rose-900"><%= alert %></p>
+                  </div>
+                  <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-700 p-1 rounded-lg hover:bg-rose-100/50 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              <% end %>
+
+              <%= yield %>
+            </div>
+          </main>
+        </div>
+      </div>
+    <% else %>
+      <%= yield %>
+    <% end %>
+    
+    <%= javascript_importmap_tags %>
+  </body>
+</html>

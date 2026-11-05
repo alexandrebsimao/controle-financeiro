@@ -1,0 +1,64 @@
+MOVIMENTAÇÕES A VENCER
+
+Olá <%= @user.name %>,
+
+Segue abaixo um resumo das movimentações a vencer de acordo com a data:
+
+<% if @due_transactions[:overdue].any? %>
+--- VENCIDAS ---
+
+<% @due_transactions[:overdue].each do |transaction| %>
+- <%= transaction.title %>
+  Valor: <%= transaction.formatted_amount %>
+  Vencimento: <%= l(transaction.due_date, format: :long) %>
+  Categoria: <%= transaction.category&.name || "Sem categoria" %>
+
+<% end %>
+<% end %>
+
+<% if @due_transactions[:due_today].any? %>
+--- VENCE HOJE ---
+
+<% @due_transactions[:due_today].each do |transaction| %>
+- <%= transaction.title %>
+  Valor: <%= transaction.formatted_amount %>
+  Vencimento: <%= l(transaction.due_date, format: :long) %>
+  Categoria: <%= transaction.category&.name || "Sem categoria" %>
+
+<% end %>
+<% end %>
+
+<% if @due_transactions[:due_in_3_days].any? %>
+--- VENCE EM 3 DIAS ---
+
+<% @due_transactions[:due_in_3_days].each do |transaction| %>
+- <%= transaction.title %>
+  Valor: <%= transaction.formatted_amount %>
+  Vencimento: <%= l(transaction.due_date, format: :long) %>
+  Categoria: <%= transaction.category&.name || "Sem categoria" %>
+
+<% end %>
+<% end %>
+
+<% if @due_transactions[:due_in_5_days].any? %>
+--- VENCE EM 5 DIAS ---
+
+<% @due_transactions[:due_in_5_days].each do |transaction| %>
+- <%= transaction.title %>
+  Valor: <%= transaction.formatted_amount %>
+  Vencimento: <%= l(transaction.due_date, format: :long) %>
+  Categoria: <%= transaction.category&.name || "Sem categoria" %>
+
+<% end %>
+<% end %>
+
+<% if @due_transactions.values.all? { |v| v.empty? } %>
+✓ Nenhuma movimentação a vencer nos próximos 5 dias!
+<% end %>
+
+---
+
+Acesse a plataforma para mais detalhes: <%= root_url %>
+
+Atenciosamente,
+Seu Assistente de Finanças

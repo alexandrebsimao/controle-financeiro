@@ -1,0 +1,81 @@
+<div class="max-w-2xl mx-auto space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Editar Movimentação</h1>
+      <p class="text-xs text-slate-500 mt-0.5">Altere os dados deste lançamento financeiro</p>
+    </div>
+    <%= link_to "← Voltar", transactions_path, class: "text-xs font-semibold text-slate-500 hover:text-slate-800" %>
+  </div>
+
+  <div class="app-card p-6 sm:p-8">
+    <%= form_with model: @transaction, local: true, class: "space-y-6", data: { controller: "transaction-form" } do |f| %>
+      <% if @transaction.errors.any? %>
+        <div class="rounded-2xl bg-rose-50 border border-rose-200/80 p-4">
+          <h3 class="text-xs font-bold text-rose-800 uppercase tracking-wider"><%= pluralize(@transaction.errors.count, "erro") %> encontrado(s):</h3>
+          <ul class="mt-2 list-disc list-inside text-xs text-rose-700 space-y-0.5">
+            <% @transaction.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <%= f.label :title, "Descrição", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.text_field :title, required: true, class: "form-input-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :transaction_type, "Tipo de Movimentação", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.select :transaction_type, [["Entrada (Receita)", "income"], ["Saída (Despesa)", "expense"], ["Investimento / Aporte", "investment"], ["Transferência entre Contas", "transfer"]], {}, required: true, class: "form-select-custom", id: "transaction_type", data: { "transaction-form-target": "typeSelect" } %>
+        </div>
+
+        <div>
+          <%= f.label :bank_account_id, "Conta Bancária", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.select :bank_account_id, current_user_bank_accounts.map { |ba| [ba.name, ba.id] }, {}, required: true, class: "form-select-custom" %>
+        </div>
+
+        <div id="destination_account_field" style="<%= @transaction.transaction_type == 'transfer' ? '' : 'display: none;' %>" data-transaction-form-target="destinationField">
+          <%= f.label :destination_bank_account_id, "Conta Destino", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.select :destination_bank_account_id, current_user_bank_accounts.map { |ba| [ba.name, ba.id] }, { prompt: "Selecione uma conta de destino" }, class: "form-select-custom" %>
+        </div>
+
+        <div id="category_field" style="<%= @transaction.transaction_type == 'transfer' ? 'display: none;' : '' %>" data-transaction-form-target="categoryField">
+          <%= f.label :category_id, "Categoria", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.select :category_id, current_user_categories.map { |c| [c.full_name, c.id] }, { prompt: "Sem categoria" }, class: "form-select-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :amount, "Valor (R$)", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.number_field :amount, step: 0.01, required: true, class: "form-input-custom font-semibold text-slate-900" %>
+        </div>
+
+        <div>
+          <%= f.label :payment_method, "Forma de Pagamento", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.select :payment_method, Transaction::PAYMENT_METHODS.invert, { prompt: "Selecione" }, class: "form-select-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :due_date, "Data de Vencimento", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.date_field :due_date, required: true, class: "form-input-custom" %>
+        </div>
+
+        <div class="sm:col-span-2 flex items-center bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+          <%= f.check_box :paid, class: "h-4 w-4 text-brand-600 focus:ring-brand-500 border-slate-300 rounded cursor-pointer" %>
+          <%= f.label :paid, "Marcado como pago (liquidado na conta)", class: "ml-2.5 text-xs font-medium text-slate-700 cursor-pointer select-none" %>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :notes, "Observações e Notas", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+        <%= f.text_area :notes, rows: 3, class: "form-input-custom" %>
+      </div>
+
+      <div class="flex items-center gap-3 pt-3 border-t border-slate-100">
+        <%= f.submit "Atualizar Movimentação", class: "btn-primary btn-md text-xs" %>
+        <%= link_to "Cancelar", transactions_path, class: "btn-secondary btn-md text-xs" %>
+      </div>
+    <% end %>
+  </div>
+</div>

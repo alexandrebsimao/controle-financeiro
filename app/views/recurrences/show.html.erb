@@ -1,0 +1,200 @@
+<% content_for :title, "#{@recurrence.title} • Finances" %>
+
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight"><%= @recurrence.title %></h1>
+        <% if @recurrence.active? %>
+          <span class="badge badge-success">Ativa</span>
+        <% else %>
+          <span class="badge badge-neutral">Inativa</span>
+        <% end %>
+      </div>
+      <p class="text-xs text-slate-500 mt-1">
+        Frequência: <%= "A cada #{@recurrence.interval} " unless @recurrence.interval == 1 %><%= @recurrence.frequency.titleize %>
+      </p>
+    </div>
+    
+    <div class="flex items-center gap-2 flex-wrap">
+      <%= link_to "Editar", edit_recurrence_path(@recurrence), class: "btn-secondary btn-md text-xs" %>
+      <% if @recurrence.active? %>
+        <%= button_to "Pausar", deactivate_recurrence_path(@recurrence), method: :patch, form_class: "inline-flex", class: "btn-warning btn-md text-xs cursor-pointer" %>
+      <% else %>
+        <%= button_to "Ativar", activate_recurrence_path(@recurrence), method: :patch, form_class: "inline-flex", class: "btn-success btn-md text-xs cursor-pointer" %>
+      <% end %>
+      <%= link_to "← Voltar às Recorrências", recurrences_path, class: "btn-secondary btn-md text-xs" %>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div class="app-stat-card border-l-4 <%= @recurrence.income? ? 'border-l-emerald-500' : 'border-l-rose-500' %>">
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tipo</span>
+      <div class="mt-2 text-xl sm:text-2xl font-extrabold <%= @recurrence.income? ? 'text-emerald-600' : 'text-rose-600' %>">
+        <%= @recurrence.income? ? 'Receita' : 'Despesa' %>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-1"><%= @recurrence.bank_account.name %></p>
+    </div>
+
+    <div class="app-stat-card border-l-4 border-l-indigo-500">
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Valor Recorrente</span>
+      <div class="mt-2 text-xl sm:text-2xl font-extrabold text-slate-900">
+        <%= number_to_currency(@recurrence.amount, unit: "R$", separator: ",", delimiter: ".") %>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-1">Por lançamento</p>
+    </div>
+
+    <div class="app-stat-card border-l-4 border-l-brand-500">
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Status Atual</span>
+      <div class="mt-2 text-xl sm:text-2xl font-extrabold">
+        <% if @recurrence.active? %>
+          <span class="text-emerald-600">Em Execução</span>
+        <% else %>
+          <span class="text-slate-400">Pausada</span>
+        <% end %>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-1"><%= @recurrence.active? ? "Gerações automáticas ativas" : "Gerações pausadas" %></p>
+    </div>
+
+    <div class="app-stat-card border-l-4 border-l-purple-500">
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ocorrências</span>
+      <div class="mt-2 text-xl sm:text-2xl font-extrabold text-purple-700">
+        <% if @recurrence.total_occurrences %>
+          <%= "#{@recurrence.occurrences_generated}/#{@recurrence.total_occurrences}" %>
+        <% else %>
+          <%= @recurrence.occurrences_generated %> (infinito)
+        <% end %>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-1">Lançamentos gerados</p>
+    </div>
+  </div>
+
+  <!-- Details Card -->
+  <div class="app-card p-6">
+    <h3 class="text-sm font-bold text-slate-900 mb-4 pb-3 border-b border-slate-100">Regras e Parâmetros</h3>
+    <dl class="grid grid-cols-1 sm:grid-cols-3 gap-5 text-xs">
+      <div>
+        <dt class="font-bold text-slate-400 uppercase tracking-wider">Conta Bancária</dt>
+        <dd class="mt-1 font-semibold text-slate-800"><%= @recurrence.bank_account.name %></dd>
+      </div>
+
+      <div>
+        <dt class="font-bold text-slate-400 uppercase tracking-wider">Categoria</dt>
+        <dd class="mt-1 font-semibold text-slate-800"><%= @recurrence.category&.name || "Sem categoria" %></dd>
+      </div>
+
+      <div>
+        <dt class="font-bold text-slate-400 uppercase tracking-wider">Data de Início</dt>
+        <dd class="mt-1 font-semibold text-slate-800"><%= @recurrence.start_date.strftime("%d/%m/%Y") %></dd>
+      </div>
+
+      <div>
+        <dt class="font-bold text-slate-400 uppercase tracking-wider">Próxima Execução</dt>
+        <dd class="mt-1 font-semibold text-slate-800">
+          <% if @recurrence.next_due_date %>
+            <%= @recurrence.next_due_date.strftime("%d/%m/%Y") %>
+          <% else %>
+            Finalizada
+          <% end %>
+        </dd>
+      </div>
+
+      <% if @recurrence.end_date %>
+        <div>
+          <dt class="font-bold text-slate-400 uppercase tracking-wider">Data Final</dt>
+          <dd class="mt-1 font-semibold text-slate-800"><%= @recurrence.end_date.strftime("%d/%m/%Y") %></dd>
+        </div>
+      <% end %>
+
+      <div>
+        <dt class="font-bold text-slate-400 uppercase tracking-wider">Tipo de Duração</dt>
+        <dd class="mt-1 font-semibold text-slate-800"><%= @recurrence.infinite? ? "Contínua (sem data final)" : "Com término definido" %></dd>
+      </div>
+    </dl>
+  </div>
+
+  <!-- Transactions Generated Table -->
+  <div class="app-card overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div>
+        <h3 class="text-sm sm:text-base font-bold text-slate-900">Movimentações Geradas por esta Recorrência</h3>
+        <p class="text-xs text-slate-400">Histórico de lançamentos criados no sistema</p>
+      </div>
+    </div>
+
+    <% if @transactions.any? %>
+      <div class="overflow-x-auto">
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Vencimento</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th class="text-right w-16">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @transactions.each do |transaction| %>
+              <tr>
+                <td>
+                  <div class="font-bold text-slate-900">
+                    <%= link_to transaction.title, transaction, class: "hover:text-brand-600 transition" %>
+                  </div>
+                  <div class="text-[11px] text-slate-400">Ocorrência #<%= transaction.recurrence_index %></div>
+                </td>
+                <td class="text-xs text-slate-600">
+                  <%= transaction.due_date.strftime("%d/%m/%Y") %>
+                </td>
+                <td class="font-bold whitespace-nowrap <%= transaction.income? ? 'text-emerald-600' : 'text-rose-600' %>">
+                  <%= transaction.income? ? '+' : '-' %><%= number_to_currency(transaction.amount, unit: "R$", separator: ",", delimiter: ".") %>
+                </td>
+                <td>
+                  <% if transaction.overdue? %>
+                    <span class="badge badge-danger">Atrasado</span>
+                  <% elsif transaction.paid? %>
+                    <span class="badge badge-success">Pago</span>
+                  <% else %>
+                    <span class="badge badge-warning">Pendente</span>
+                  <% end %>
+                </td>
+                <td class="text-right">
+                  <div class="relative inline-block text-left" data-controller="dropdown">
+                    <button type="button" class="action-menu-btn" data-dropdown-target="button" data-action="click->dropdown#toggle" title="Ações" aria-label="Menu de ações">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                      </svg>
+                    </button>
+
+                    <div data-dropdown-target="menu" class="hidden action-menu-dropdown">
+                      <%= link_to transaction, class: "action-menu-item" do %>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span>Ver detalhes</span>
+                      <% end %>
+                      <%= link_to edit_transaction_path(transaction), class: "action-menu-item" do %>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <span>Editar</span>
+                      <% end %>
+                      <% if !transaction.paid? %>
+                        <%= link_to mark_paid_transaction_path(transaction), method: :patch, data: { turbo_method: :patch }, class: "action-menu-item action-menu-item-success" do %>
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                          <span>Marcar Pago</span>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="text-center py-12 text-slate-400 text-xs">
+        Nenhuma movimentação gerada ainda.
+      </div>
+    <% end %>
+  </div>
+</div>

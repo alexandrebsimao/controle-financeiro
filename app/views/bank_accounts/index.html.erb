@@ -1,0 +1,94 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Contas Bancárias</h1>
+      <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Gerencie suas contas correntes, poupanças e carteiras de investimento</p>
+    </div>
+    <%= link_to new_bank_account_path, class: "btn-primary btn-md gap-1.5 self-start sm:self-auto" do %>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+      <span>Nova Conta</span>
+    <% end %>
+  </div>
+
+  <!-- Cards Grid -->
+  <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <% @bank_accounts.each do |account| %>
+      <div class="app-card overflow-hidden app-card-hover flex flex-col justify-between">
+        <div class="p-5">
+          <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white text-sm shadow-2xs" style="background-color: <%= account.color.presence || '#6366f1' %>;">
+                <%= account.name.to_s.first&.upcase || "🏦" %>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-900 leading-snug">
+                  <%= link_to account.name, account, class: "hover:text-brand-600 transition" %>
+                </h3>
+                <p class="text-xs text-slate-400 font-medium"><%= account.bank_name %></p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <% if account.active? %>
+                <span class="badge badge-success">Ativa</span>
+              <% else %>
+                <span class="badge badge-neutral">Inativa</span>
+              <% end %>
+
+              <div class="relative inline-block text-left" data-controller="dropdown">
+                <button type="button" class="action-menu-btn" data-dropdown-target="button" data-action="click->dropdown#toggle" title="Ações" aria-label="Menu de ações">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                  </svg>
+                </button>
+
+                <div data-dropdown-target="menu" class="hidden action-menu-dropdown">
+                  <%= link_to account, class: "action-menu-item" do %>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Ver Extrato</span>
+                  <% end %>
+                  <%= link_to edit_bank_account_path(account), class: "action-menu-item" do %>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    <span>Editar</span>
+                  <% end %>
+                  <div class="action-menu-divider"></div>
+                  <%= link_to account, data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja apagar esta conta e seus dados?" }, class: "action-menu-item action-menu-item-danger" do %>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span>Apagar</span>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 pb-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Saldo Atual</span>
+            <div class="text-2xl font-extrabold tracking-tight mt-0.5 <%= account.balance >= 0 ? 'text-slate-900' : 'text-rose-600' %>">
+              <%= number_to_currency(account.balance, unit: "R$", separator: ",", delimiter: ".") %>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">
+              <%= account.account_type.titleize %> • <%= account.currency %>
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-slate-50/70 px-5 py-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold gap-2">
+          <%= link_to "Ver Extrato →", account, class: "text-brand-600 hover:text-brand-800 transition" %>
+          <span class="text-[11px] text-slate-400 font-normal"><%= account.transactions.count %> lançamentos</span>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @bank_accounts.empty? %>
+    <div class="app-card text-center py-16 px-4">
+      <span class="text-4xl block mb-2">🏦</span>
+      <h3 class="text-base font-bold text-slate-800">Nenhuma conta bancária cadastrada</h3>
+      <p class="text-xs text-slate-400 mt-1 mb-5 max-w-sm mx-auto">
+        Cadastre sua primeira conta corrente ou carteira para começar a registrar transações.
+      </p>
+      <%= link_to "Criar Primeira Conta", new_bank_account_path, class: "btn-primary btn-md text-xs" %>
+    </div>
+  <% end %>
+</div>

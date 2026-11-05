@@ -1,0 +1,66 @@
+<div class="max-w-2xl mx-auto space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Editar Conta Bancária</h1>
+      <p class="text-xs text-slate-500 mt-0.5">Atualize os detalhes da sua conta</p>
+    </div>
+    <%= link_to "← Voltar", bank_accounts_path, class: "text-xs font-semibold text-slate-500 hover:text-slate-800" %>
+  </div>
+
+  <div class="app-card p-6 sm:p-8">
+    <%= form_with model: @bank_account, local: true, class: "space-y-6" do |f| %>
+      <% if @bank_account.errors.any? %>
+        <div class="rounded-2xl bg-rose-50 border border-rose-200/80 p-4">
+          <h3 class="text-xs font-bold text-rose-800 uppercase tracking-wider"><%= pluralize(@bank_account.errors.count, "erro") %> encontrado(s):</h3>
+          <ul class="mt-2 list-disc list-inside text-xs text-rose-700 space-y-0.5">
+            <% @bank_account.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <%= f.label :name, "Nome da Conta", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.text_field :name, required: true, class: "form-input-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :bank_name, "Instituição Financeira", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.text_field :bank_name, class: "form-input-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :account_type, "Tipo de Conta", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.select :account_type, [["Corrente", "checking"], ["Poupança", "savings"], ["Investimento", "investment"]], {}, class: "form-select-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :currency, "Moeda", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.text_field :currency, class: "form-input-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :balance, "Saldo (R$)", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.number_field :balance, step: 0.01, class: "form-input-custom font-semibold text-slate-900" %>
+        </div>
+
+        <div>
+          <%= f.label :color, "Cor de Identificação", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.color_field :color, class: "w-full h-10 p-1 rounded-xl border border-slate-300 cursor-pointer" %>
+        </div>
+      </div>
+
+      <div class="flex items-center bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+        <%= f.check_box :active, { class: "h-4 w-4 text-brand-600 focus:ring-brand-500 border-slate-300 rounded cursor-pointer" } %>
+        <%= f.label :active, "Conta ativa no sistema", class: "ml-2.5 text-xs font-medium text-slate-700 cursor-pointer select-none" %>
+      </div>
+
+      <div class="flex items-center gap-3 pt-3 border-t border-slate-100">
+        <%= f.submit "Salvar Alterações", class: "btn-primary btn-md text-xs" %>
+        <%= link_to "Cancelar", bank_accounts_path, class: "btn-secondary btn-md text-xs" %>
+      </div>
+    <% end %>
+  </div>
+</div>

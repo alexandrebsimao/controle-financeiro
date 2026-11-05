@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: "João Silva"
+  email: "joao@example.com"
+  encrypted_password: "$2a$12$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV"
+  created_at: "<%= Time.current %>"
+  updated_at: "<%= Time.current %>"
+
+two:
+  name: "Maria Santos"
+  email: "maria@example.com"
+  encrypted_password: "$2a$12$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV"
+  created_at: "<%= Time.current %>"
+  updated_at: "<%= Time.current %>"

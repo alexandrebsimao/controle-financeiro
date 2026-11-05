@@ -1,0 +1,39 @@
+<nav class="space-y-2 text-center text-xs">
+  <%- if controller_name != 'sessions' %>
+    <div>
+      <%= link_to "Já possui uma conta? Fazer Login", new_session_path(resource_name), class: "font-semibold text-brand-600 hover:text-brand-800 transition" %>
+    </div>
+  <% end %>
+
+  <%- if devise_mapping.registerable? && controller_name != 'registrations' %>
+    <div>
+      <%= link_to "Não tem uma conta? Criar Conta", new_registration_path(resource_name), class: "font-semibold text-brand-600 hover:text-brand-800 transition" %>
+    </div>
+  <% end %>
+
+  <%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
+    <div>
+      <%= link_to "Esqueceu sua senha?", new_password_path(resource_name), class: "font-semibold text-brand-600 hover:text-brand-800 transition" %>
+    </div>
+  <% end %>
+
+  <%- if devise_mapping.confirmable? && controller_name != 'confirmations' %>
+    <div>
+      <%= link_to "Não recebeu instruções de confirmação?", new_confirmation_path(resource_name), class: "text-slate-500 hover:text-slate-800 transition" %>
+    </div>
+  <% end %>
+
+  <%- if devise_mapping.lockable? && resource_class.unlock_strategy_enabled?(:email) && controller_name != 'unlocks' %>
+    <div>
+      <%= link_to "Não recebeu instruções de desbloqueio?", new_unlock_path(resource_name), class: "text-slate-500 hover:text-slate-800 transition" %>
+    </div>
+  <% end %>
+
+  <%- if devise_mapping.omniauthable? %>
+    <%- resource_class.omniauth_providers.each do |provider| %>
+      <div class="pt-2">
+        <%= button_to "Conectar com #{OmniAuth::Utils.camelize(provider)}", omniauth_authorize_path(resource_name, provider), data: { turbo: false }, form_class: "w-full", class: "w-full btn-secondary py-2.5 text-xs font-semibold cursor-pointer" %>
+      </div>
+    <% end %>
+  <% end %>
+</nav>

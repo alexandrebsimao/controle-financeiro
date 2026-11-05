@@ -1,0 +1,227 @@
+<% content_for :title, "#{@insight.title} - Consultoria IA" %>
+
+<div class="space-y-6 max-w-5xl mx-auto">
+  <!-- Top Navigation & Actions -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <%= link_to financial_insights_path, class: "inline-flex items-center text-sm font-semibold text-gray-600 hover:text-indigo-600 transition" do %>
+      <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Voltar para o Histórico de Análises
+    <% end %>
+
+    <div class="flex items-center gap-2 flex-wrap">
+      <%= button_to financial_insights_path(provider: 'groq'), method: :post, form_class: "inline-flex", data: { turbo_confirm: "Deseja gerar uma nova análise financeira com o Groq?" }, class: "btn-secondary btn-sm text-brand-700 bg-brand-50 border-brand-200 hover:bg-brand-100 cursor-pointer" do %>
+        ⚡ Reanalisar (Groq)
+      <% end %>
+
+      <%= button_to financial_insights_path(provider: 'gemini'), method: :post, form_class: "inline-flex", data: { turbo_confirm: "Deseja gerar uma nova análise financeira com o Google Gemini?" }, class: "btn-secondary btn-sm text-purple-700 bg-purple-50 border-purple-200 hover:bg-purple-100 cursor-pointer" do %>
+        ✨ Reanalisar (Gemini)
+      <% end %>
+
+      <%= button_to financial_insight_path(@insight), method: :delete, form_class: "inline-flex", data: { turbo_confirm: "Tem certeza que deseja excluir esta análise?" }, class: "btn-secondary btn-sm text-rose-600 hover:bg-rose-50 border-slate-200 cursor-pointer" do %>
+        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        Excluir
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Title Card -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-6">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+            Período <%= @insight.period %>
+          </span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold <%= @insight.provider == 'gemini' ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' %>">
+            <%= @insight.provider_badge %> (<%= @insight.model_used %>)
+          </span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+          <%= @insight.title %>
+        </h1>
+        <p class="text-xs sm:text-sm text-gray-500 mt-1">
+          Análise calculada e gerada em <%= @insight.formatted_date %>
+        </p>
+      </div>
+    </div>
+
+    <!-- KPI Cards Snapshot -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+      <div class="p-4 rounded-xl bg-gray-50 border border-gray-100">
+        <span class="text-xs font-semibold uppercase text-gray-500 tracking-wider">Receitas do Mês</span>
+        <p class="text-xl font-bold text-emerald-600 mt-1">
+          <%= number_to_currency(@insight.total_income, unit: "R$ ", separator: ",", delimiter: ".") %>
+        </p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-gray-50 border border-gray-100">
+        <span class="text-xs font-semibold uppercase text-gray-500 tracking-wider">Despesas de Consumo</span>
+        <p class="text-xl font-bold text-rose-600 mt-1">
+          <%= number_to_currency(@insight.total_expenses, unit: "R$ ", separator: ",", delimiter: ".") %>
+        </p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-gray-50 border border-gray-100">
+        <span class="text-xs font-semibold uppercase text-gray-500 tracking-wider"><%= @insight.total_investments > 0 ? "Investimentos (Aportes)" : "Saldo Operacional" %></span>
+        <p class="text-xl font-bold <%= @insight.total_investments > 0 ? 'text-indigo-600' : (@insight.net_savings >= 0 ? 'text-emerald-600' : 'text-rose-600') %> mt-1">
+          <%= number_to_currency(@insight.total_investments > 0 ? @insight.total_investments : @insight.net_savings, unit: "R$ ", separator: ",", delimiter: ".") %>
+        </p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-gray-50 border border-gray-100">
+        <span class="text-xs font-semibold uppercase text-gray-500 tracking-wider"><%= @insight.total_investments > 0 ? "Saldo Livre Operacional" : "Taxa de Poupança" %></span>
+        <p class="text-xl font-bold <%= @insight.net_savings >= 0 ? 'text-emerald-600' : 'text-rose-600' %> mt-1">
+          <%= @insight.total_investments > 0 ? number_to_currency(@insight.net_savings, unit: "R$ ", separator: ",", delimiter: ".") : "#{@insight.savings_rate}%" %>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <% if @insight.timing_analysis.present? && @insight.working_capital_buffer.positive? %>
+    <div class="rounded-2xl border border-indigo-200 bg-indigo-50/70 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-start gap-3.5">
+        <div class="p-2.5 bg-white rounded-xl text-indigo-700 text-xl shadow-xs border border-indigo-100">⏳</div>
+        <div>
+          <h4 class="text-sm font-bold text-indigo-950">Descompasso de Caixa (Gastos Início do Mês vs Renda Dia 20)</h4>
+          <p class="text-xs text-indigo-900 mt-1 leading-relaxed">
+            Você possui <strong><%= number_to_currency(@insight.early_commitments, unit: "R$ ", separator: ",", delimiter: ".") %></strong> em contas que vencem até o dia 19. 
+            Colchão de virada de mês recomendado para guardar no dia 20: <strong><%= number_to_currency(@insight.working_capital_buffer, unit: "R$ ", separator: ",", delimiter: ".") %></strong>.
+          </p>
+        </div>
+      </div>
+      <span class="text-xs font-semibold text-indigo-700 bg-white px-3 py-1.5 rounded-lg border border-indigo-200 shadow-2xs whitespace-nowrap self-start sm:self-auto">
+        Ver Análise de Vencimentos ↓
+      </span>
+    </div>
+  <% end %>
+
+  <!-- Markdown Report Container -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-10" data-controller="markdown">
+    <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-6">
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+        <h2 class="text-base font-bold text-gray-900 uppercase tracking-wider">
+          Relatório Completo de Consultoria & Recomendações
+        </h2>
+      </div>
+      <button 
+        type="button" 
+        onclick="navigator.clipboard.writeText(document.getElementById('raw-markdown-content').value); alert('Análise copiada para a área de transferência!');"
+        class="text-xs font-semibold text-gray-500 hover:text-indigo-600 transition flex items-center gap-1 cursor-pointer"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+        </svg>
+        Copiar Análise
+      </button>
+    </div>
+
+    <!-- Hidden raw markdown source -->
+    <textarea id="raw-markdown-content" class="hidden" data-markdown-target="source"><%= @insight.content %></textarea>
+
+    <!-- Rendered Markdown Output with Custom Tailwind Styling -->
+    <div 
+      data-markdown-target="output" 
+      class="ai-report-content space-y-4 text-gray-800 leading-relaxed text-sm sm:text-base font-normal"
+    >
+      <div class="animate-pulse space-y-3">
+        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+        <div class="h-4 bg-gray-200 rounded w-full"></div>
+        <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Raw Metrics Collapsible -->
+  <% if @insight.raw_metrics.present? %>
+    <details class="bg-gray-50 rounded-xl border border-gray-200 p-4 transition group">
+      <summary class="font-bold text-xs uppercase tracking-wider text-gray-600 cursor-pointer flex items-center justify-between select-none">
+        <span>🔍 Ver Dados Brutos Consolidados Enviados ao Groq</span>
+        <span class="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+      </summary>
+      <div class="mt-4">
+        <pre class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto max-h-96"><%= JSON.pretty_generate(@insight.raw_metrics) rescue @insight.raw_metrics.inspect %></pre>
+      </div>
+    </details>
+  <% end %>
+</div>
+
+<style>
+  /* Rich styles for rendered Markdown inside ai-report-content */
+  .ai-report-content h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #111827;
+    margin-top: 1.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .ai-report-content h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #3730a3;
+    background-color: #f5f3ff;
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #6366f1;
+  }
+  .ai-report-content h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .ai-report-content p {
+    margin-bottom: 1rem;
+    line-height: 1.65;
+  }
+  .ai-report-content ul {
+    list-style-type: disc;
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+    space-y: 0.35rem;
+  }
+  .ai-report-content ol {
+    list-style-type: decimal;
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .ai-report-content li {
+    margin-bottom: 0.4rem;
+  }
+  .ai-report-content strong {
+    font-weight: 700;
+    color: #111827;
+  }
+  .ai-report-content table {
+    width: 100%;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .ai-report-content th {
+    background-color: #f3f4f6;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-weight: 700;
+    border: 1px solid #e5e7eb;
+  }
+  .ai-report-content td {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e5e7eb;
+  }
+  .ai-report-content blockquote {
+    border-left: 4px solid #cbd5e1;
+    padding-left: 1rem;
+    font-style: italic;
+    color: #475569;
+    margin: 1rem 0;
+  }
+</style>

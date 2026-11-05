@@ -1,0 +1,329 @@
+<!-- AI Insights Banner -->
+<div class="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-900 via-indigo-900 to-purple-900 p-5 sm:p-6 text-white shadow-lg border border-brand-700/50">
+  <div class="absolute -right-10 -top-10 w-48 h-48 bg-brand-500/15 rounded-full blur-2xl pointer-events-none"></div>
+  <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-start sm:items-center gap-3.5">
+      <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-xl flex-shrink-0 shadow-inner">
+        ⚡
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h4 class="font-bold text-base sm:text-lg tracking-tight">Consultoria Financeira com IA</h4>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 border border-white/20">Groq & Gemini</span>
+        </div>
+        <p class="text-xs text-indigo-200 mt-0.5 max-w-xl">
+          Diagnósticos automáticos, projeção de fluxo de caixa e recomendações práticas de corte de despesas.
+        </p>
+      </div>
+    </div>
+    <div class="flex-shrink-0">
+      <%= link_to financial_insights_path, class: "inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white text-brand-900 text-xs font-bold hover:bg-brand-50 transition shadow-md hover:shadow-lg active:scale-95" do %>
+        <span>Acessar Consultoria IA</span>
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Key Stat Cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-8">
+  <!-- Total Balance -->
+  <div class="app-card p-4 sm:p-5 flex flex-col justify-between app-card-hover border-l-4 border-l-indigo-500">
+    <div class="flex items-center justify-between">
+      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Saldo Total</span>
+      <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+      </div>
+    </div>
+    <div class="mt-3">
+      <div class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900">
+        <%= number_to_currency(@total_balance, unit: "R$", separator: ",", delimiter: ".") %>
+      </div>
+      <p class="text-xs text-indigo-600 font-medium mt-1"><%= @bank_accounts.count %> conta(s) bancária(s)</p>
+    </div>
+  </div>
+
+  <!-- Monthly Income -->
+  <div class="app-card p-4 sm:p-5 flex flex-col justify-between app-card-hover border-l-4 border-l-emerald-500">
+    <div class="flex items-center justify-between">
+      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Receitas (Mês)</span>
+      <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>
+      </div>
+    </div>
+    <div class="mt-3">
+      <div class="text-xl sm:text-2xl font-extrabold tracking-tight text-emerald-600">
+        <%= number_to_currency(@monthly_income, unit: "R$", separator: ",", delimiter: ".") %>
+      </div>
+      <p class="text-xs text-slate-400 font-medium mt-1">Entradas acumuladas</p>
+    </div>
+  </div>
+
+  <!-- Monthly Expenses -->
+  <div class="app-card p-4 sm:p-5 flex flex-col justify-between app-card-hover border-l-4 border-l-rose-500">
+    <div class="flex items-center justify-between">
+      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Despesas (Mês)</span>
+      <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/></svg>
+      </div>
+    </div>
+    <div class="mt-3">
+      <div class="text-xl sm:text-2xl font-extrabold tracking-tight text-rose-600">
+        <%= number_to_currency(@monthly_expenses, unit: "R$", separator: ",", delimiter: ".") %>
+      </div>
+      <p class="text-xs text-slate-400 font-medium mt-1">Saídas acumuladas</p>
+    </div>
+  </div>
+
+  <!-- Monthly Balance -->
+  <% monthly_balance = @monthly_income - @monthly_expenses %>
+  <div class="app-card p-4 sm:p-5 flex flex-col justify-between app-card-hover border-l-4 <%= monthly_balance >= 0 ? 'border-l-teal-500' : 'border-l-amber-500' %>">
+    <div class="flex items-center justify-between">
+      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Balanço</span>
+      <div class="w-8 h-8 rounded-xl <%= monthly_balance >= 0 ? 'bg-teal-50 text-teal-600' : 'bg-amber-50 text-amber-600' %> flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+      </div>
+    </div>
+    <div class="mt-3">
+      <div class="text-xl sm:text-2xl font-extrabold tracking-tight <%= monthly_balance >= 0 ? 'text-teal-700' : 'text-amber-700' %>">
+        <%= number_to_currency(monthly_balance, unit: "R$", separator: ",", delimiter: ".") %>
+      </div>
+      <p class="text-xs <%= monthly_balance >= 0 ? 'text-teal-600' : 'text-amber-600' %> font-medium mt-1">
+        <%= monthly_balance >= 0 ? "Superávit no período" : "Déficit no período" %>
+      </p>
+      <% if @monthly_investments.to_d > 0 %>
+        <p class="text-[10px] text-indigo-600 font-semibold mt-0.5">
+          💎 Aportes: <%= number_to_currency(@monthly_investments, unit: "R$", separator: ",", delimiter: ".") %>
+        </p>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+  <!-- Monthly Trend & Forecast Chart -->
+  <% if (@monthly_trend.present? && @monthly_trend.any?) || (@expense_forecast.present? && @expense_forecast.any?) %>
+    <div class="lg:col-span-2 space-y-6">
+      <% if @monthly_trend.present? && @monthly_trend.any? %>
+        <div class="app-card overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900">Tendência de Movimentações</h3>
+              <p class="text-xs text-slate-500">Histórico realizado nos últimos 6 meses</p>
+            </div>
+            <span class="badge badge-info">Realizado</span>
+          </div>
+          <div class="p-5">
+            <div style="position: relative; height: 280px; width: 100%;">
+              <canvas 
+                id="trendChart"
+                style="max-width: 100%;"
+                data-controller="chart"
+                data-chart-labels-value="<%= @monthly_trend.keys.to_json %>"
+                data-chart-income-value="<%= @monthly_trend.values.map { |v| v[:income] || 0 }.to_json %>"
+                data-chart-expenses-value="<%= @monthly_trend.values.map { |v| v[:expenses] || 0 }.to_json %>"
+                data-chart-type-value="line">
+              </canvas>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% if @expense_forecast.present? && @expense_forecast.any? %>
+        <div class="app-card overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900">Previsão de Gastos e Saldo</h3>
+              <p class="text-xs text-slate-500">Projeção estimada para os próximos 6 meses</p>
+            </div>
+            <span class="badge badge-purple">Projeção</span>
+          </div>
+          <div class="p-5">
+            <div style="position: relative; height: 300px; width: 100%;">
+              <canvas
+                id="forecastChart"
+                style="max-width: 100%;"
+                data-controller="chart"
+                data-chart-labels-value="<%= @expense_forecast.keys.to_json %>"
+                data-chart-income-value="<%= @expense_forecast.values.map { |v| v[:income] || 0 }.to_json %>"
+                data-chart-expenses-value="<%= @expense_forecast.values.map { |v| v[:expenses] || 0 }.to_json %>"
+                data-chart-balance-value="<%= @expense_forecast.values.map { |v| v[:projected_balance] || 0 }.to_json %>"
+                data-chart-type-value="line">
+              </canvas>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- Expenses by Category -->
+  <% if @expenses_by_category.any? %>
+    <div class="lg:col-span-1">
+      <div class="app-card overflow-hidden h-full flex flex-col justify-between">
+        <div>
+          <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50">
+            <h3 class="text-sm sm:text-base font-bold text-slate-900">Despesas por Categoria</h3>
+            <p class="text-xs text-slate-500">Distribuição do mês atual</p>
+          </div>
+          <div class="p-5">
+            <div style="position: relative; height: 230px; width: 100%;">
+              <canvas 
+                id="categoriesChart"
+                style="max-width: 100%;"
+                data-controller="chart"
+                data-chart-labels-value="<%= @expenses_by_category.keys.to_json %>"
+                data-chart-data-value="<%= @expenses_by_category.values.to_json %>"
+                data-chart-type-value="doughnut">
+              </canvas>
+            </div>
+          </div>
+        </div>
+        <div class="px-5 py-4 border-t border-slate-100 space-y-2 max-h-60 overflow-y-auto">
+          <% @expenses_by_category.each_with_index do |(category, amount), index| %>
+            <div class="flex justify-between items-center text-xs py-0.5">
+              <div class="flex items-center min-w-0">
+                <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: <%= ['#6366f1', '#f43f5e', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#4f46e5', '#14b8a6', '#f97316'][index % 10] %>"></div>
+                <span class="ml-2 font-medium text-slate-700 truncate"><%= category %></span>
+              </div>
+              <span class="font-bold text-slate-900 flex-shrink-0"><%= number_to_currency(amount, unit: "R$", separator: ",", delimiter: ".") %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- Upcoming Transactions & Credit Cards Row -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Upcoming Transactions -->
+  <div class="lg:col-span-2">
+    <div class="app-card overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div>
+          <h3 class="text-sm sm:text-base font-bold text-slate-900">Próximas Movimentações</h3>
+          <p class="text-xs text-slate-500">Contas e receitas agendadas</p>
+        </div>
+        <%= link_to "Ver Todas →", transactions_path, class: "text-xs font-bold text-brand-600 hover:text-brand-800 transition" %>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th class="hidden sm:table-cell">Vencimento</th>
+              <th class="text-right">Valor</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if @upcoming_transactions.any? %>
+              <% @upcoming_transactions.each do |transaction| %>
+                <% days_until = (transaction.due_date - Date.today).to_i %>
+                <% is_urgent = days_until <= 3 && days_until > 0 %>
+                <tr class="<%= is_urgent ? 'bg-amber-50/50' : '' %>">
+                  <td>
+                    <div class="font-bold text-slate-900"><%= transaction.title %></div>
+                    <div class="text-xs text-slate-400"><%= transaction.bank_account.name %></div>
+                  </td>
+                  <td class="hidden sm:table-cell text-xs text-slate-600">
+                    <div><%= transaction.due_date.strftime("%d/%m/%Y") %></div>
+                    <% if is_urgent %>
+                      <span class="text-[10px] font-bold text-amber-600">Vence em <%= days_until %> dia(s)</span>
+                    <% end %>
+                  </td>
+                  <td class="text-right font-bold <%= transaction.income? ? 'text-emerald-600' : 'text-rose-600' %>">
+                    <%= transaction.income? ? '+' : '-' %><%= number_to_currency(transaction.amount, unit: "R$", separator: ",", delimiter: ".") %>
+                  </td>
+                  <td>
+                    <% if transaction.overdue? %>
+                      <span class="badge badge-danger">Atrasado</span>
+                    <% elsif transaction.paid? %>
+                      <span class="badge badge-success">Pago</span>
+                    <% else %>
+                      <span class="badge badge-info">Pendente</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr>
+                <td colspan="4" class="text-center py-8 text-slate-400 text-xs">
+                  Nenhuma movimentação futura agendada.
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Credit Cards & Overdue Summary -->
+  <div class="space-y-6">
+    <!-- Credit Cards Invoices -->
+    <div class="app-card overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div>
+          <h3 class="text-sm sm:text-base font-bold text-slate-900">Próximas Faturas</h3>
+          <p class="text-xs text-slate-500">Cartões de crédito</p>
+        </div>
+        <%= link_to "Ver Cartões →", credit_cards_path, class: "text-xs font-bold text-brand-600 hover:text-brand-800 transition" %>
+      </div>
+      <div class="divide-y divide-slate-100 max-h-72 overflow-y-auto">
+        <% if @upcoming_invoices.any? %>
+          <% @upcoming_invoices.each do |invoice| %>
+            <div class="p-4 hover:bg-slate-50/70 transition flex items-center justify-between">
+              <div>
+                <p class="text-xs font-bold text-slate-900"><%= invoice.credit_card.name %></p>
+                <p class="text-[11px] text-slate-400">Fatura <%= invoice.reference_label %></p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs font-extrabold text-slate-900"><%= number_to_currency(invoice.total_amount, unit: "R$", separator: ",", delimiter: ".") %></p>
+                <p class="text-[11px] text-slate-500">Vence <%= invoice.due_date.strftime("%d/%m") %></p>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="p-6 text-center text-xs text-slate-400">
+            Nenhuma fatura pendente próxima.
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Overdue Transactions Alert Card -->
+    <% if @overdue_transactions.any? %>
+      <div class="app-card overflow-hidden border-rose-200 bg-rose-50/30">
+        <div class="px-5 py-3.5 border-b border-rose-100 bg-rose-100/50 flex items-center gap-2">
+          <span class="text-sm">⚠️</span>
+          <h3 class="text-xs sm:text-sm font-bold text-rose-900">Pendências em Atraso</h3>
+        </div>
+        <div class="divide-y divide-rose-100/60 max-h-60 overflow-y-auto">
+          <% @overdue_transactions.each do |transaction| %>
+            <div class="p-3.5 hover:bg-rose-100/30 transition flex justify-between items-center text-xs">
+              <div>
+                <p class="font-bold text-slate-900"><%= transaction.title %></p>
+                <p class="text-rose-600 text-[11px]">Venceu em <%= transaction.due_date.strftime("%d/%m/%Y") %></p>
+              </div>
+              <span class="font-extrabold text-rose-600"><%= number_to_currency(transaction.amount, unit: "R$", separator: ",", delimiter: ".") %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <div class="app-card p-5 border-emerald-200 bg-emerald-50/30 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg flex-shrink-0">
+          ✅
+        </div>
+        <div>
+          <h4 class="text-xs sm:text-sm font-bold text-emerald-900">Tudo em dia!</h4>
+          <p class="text-xs text-emerald-700 mt-0.5">Você não possui nenhuma pendência em atraso.</p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

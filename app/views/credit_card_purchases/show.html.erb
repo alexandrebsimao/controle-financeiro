@@ -1,0 +1,148 @@
+<% content_for :title, "#{@purchase.title} • Finances" %>
+
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight"><%= @purchase.title %></h1>
+        <% if @purchase.category %>
+          <span class="badge badge-purple text-[11px]"><%= @purchase.category.name %></span>
+        <% end %>
+      </div>
+      <p class="text-xs text-slate-500 mt-1">Cartão de Crédito <%= @credit_card.name %></p>
+    </div>
+    <div class="flex items-center gap-2">
+      <%= link_to "Editar Compra", edit_credit_card_purchase_path(@credit_card, @purchase), class: "btn-secondary btn-md text-xs" %>
+      <%= link_to "← Voltar ao Cartão", credit_card_path(@credit_card), class: "btn-secondary btn-md text-xs" %>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="app-stat-card border-l-4 border-l-rose-500">
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Valor Total</span>
+      <div class="mt-2 text-2xl font-extrabold text-rose-600">
+        <%= number_to_currency(@purchase.total_amount, unit: "R$", separator: ",", delimiter: ".") %>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-1">Comprado em <%= @purchase.purchased_at.strftime("%d/%m/%Y") %></p>
+    </div>
+
+    <div class="app-stat-card border-l-4 border-l-brand-500">
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Parcelas</span>
+      <div class="mt-2 text-2xl font-extrabold text-slate-900">
+        <% if @purchase.installments > 1 %>
+          <%= "#{@purchase.installments}x" %>
+        <% else %>
+          À Vista
+        <% end %>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-1"><%= @expenses.count %> parcela(s) vinculadas</p>
+    </div>
+
+    <div class="app-stat-card border-l-4 border-l-indigo-500">
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Valor por Parcela</span>
+      <div class="mt-2 text-2xl font-extrabold text-indigo-600">
+        <%= number_to_currency(@purchase.installment_amount, unit: "R$", separator: ",", delimiter: ".") %>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-1">Estimativa individual</p>
+    </div>
+  </div>
+
+  <!-- Details Card -->
+  <div class="app-card p-6">
+    <h3 class="text-sm font-bold text-slate-900 mb-4 pb-3 border-b border-slate-100">Informações Detalhadas</h3>
+    <dl class="grid grid-cols-1 sm:grid-cols-3 gap-5 text-xs">
+      <div>
+        <dt class="font-bold text-slate-400 uppercase tracking-wider">Categoria</dt>
+        <dd class="mt-1 font-semibold text-slate-800"><%= @purchase.category&.name || "Sem categoria" %></dd>
+      </div>
+
+      <div>
+        <dt class="font-bold text-slate-400 uppercase tracking-wider">Data da Compra</dt>
+        <dd class="mt-1 font-semibold text-slate-800"><%= @purchase.purchased_at.strftime("%d/%m/%Y") %></dd>
+      </div>
+
+      <div>
+        <dt class="font-bold text-slate-400 uppercase tracking-wider">Data do Cadastro</dt>
+        <dd class="mt-1 font-semibold text-slate-800"><%= @purchase.created_at.strftime("%d/%m/%Y às %H:%M") %></dd>
+      </div>
+
+      <% if @purchase.notes.present? %>
+        <div class="sm:col-span-3 pt-3 border-t border-slate-100">
+          <dt class="font-bold text-slate-400 uppercase tracking-wider">Observações</dt>
+          <dd class="mt-1 text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100"><%= @purchase.notes %></dd>
+        </div>
+      <% end %>
+    </dl>
+  </div>
+
+  <!-- Installments Table -->
+  <div class="app-card overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div>
+        <h3 class="text-sm sm:text-base font-bold text-slate-900">Parcelas Geradas</h3>
+        <p class="text-xs text-slate-400">Distribuição nas faturas mensais</p>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="app-table">
+        <thead>
+          <tr>
+            <th>Parcela</th>
+            <th>Valor</th>
+            <th>Fatura Vinculada</th>
+            <th>Vencimento</th>
+            <th class="text-right w-16">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @expenses.each do |expense| %>
+            <tr>
+              <td>
+                <span class="font-bold text-slate-900">#<%= expense.installment_number %></span> de <%= @purchase.installments %>
+              </td>
+              <td class="font-bold whitespace-nowrap text-rose-600">
+                <%= number_to_currency(expense.amount, unit: "R$", separator: ",", delimiter: ".") %>
+              </td>
+              <td>
+                <% if expense.invoice %>
+                  <%= link_to credit_card_invoice_path(@credit_card, expense.invoice), class: "badge badge-purple text-[11px] hover:opacity-80 transition" do %>
+                    <%= expense.invoice.reference_label %>
+                  <% end %>
+                <% else %>
+                  <span class="text-slate-300">-</span>
+                <% end %>
+              </td>
+              <td class="text-xs text-slate-600">
+                <%= expense.due_date.strftime("%d/%m/%Y") %>
+              </td>
+              <td class="text-right">
+                <div class="relative inline-block text-left" data-controller="dropdown">
+                  <button type="button" class="action-menu-btn" data-dropdown-target="button" data-action="click->dropdown#toggle" title="Ações" aria-label="Menu de ações">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                  </button>
+
+                  <div data-dropdown-target="menu" class="hidden action-menu-dropdown">
+                    <%= link_to edit_credit_card_purchase_expense_path(@credit_card, @purchase, expense), class: "action-menu-item" do %>
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                      <span>Editar Parcela</span>
+                    <% end %>
+                    <div class="action-menu-divider"></div>
+                    <%= button_to credit_card_purchase_expense_path(@credit_card, @purchase, expense), method: :delete, data: { turbo_confirm: "Tem certeza que deseja apagar esta parcela?" }, class: "action-menu-item action-menu-item-danger" do %>
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                      <span>Apagar</span>
+                    <% end %>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,312 @@
+<% content_for :title, "Consultoria IA - Redução de Custos" %>
+
+<div class="space-y-6">
+  <!-- Header / Hero Banner com Seletor de IA -->
+  <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-800 rounded-2xl shadow-xl p-6 sm:p-8 text-white relative overflow-hidden">
+    <div class="absolute -right-12 -top-12 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute right-1/4 -bottom-10 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+    <div class="relative z-10 space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/30 backdrop-blur-xs">
+              🤖 Multi-IA: Groq & Google Gemini
+            </span>
+            <span class="text-xs text-indigo-200">
+              Provedor ativo padrão: <strong><%= @current_provider == 'gemini' ? 'Google Gemini' : 'Groq' %></strong>
+            </span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            💡 Consultoria de Finanças & Redução de Custos
+          </h1>
+          <p class="mt-2 text-sm sm:text-base text-indigo-100 max-w-2xl leading-relaxed">
+            Nossa inteligência artificial analisa suas contas reais, compras no cartão ativo e vencimentos para antecipar fluxo de caixa e sugerir cortes práticos. Escolha abaixo qual motor de IA deseja utilizar.
+          </p>
+        </div>
+
+        <div>
+          <%= link_to ai_settings_path, class: "inline-flex items-center px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 transition backdrop-blur-xs shadow-xs" do %>
+            ⚙️ Configurar Provedores de IA
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Formulário de Execução com Escolha do Provedor de IA -->
+      <%= form_with url: financial_insights_path, method: :post, local: true, class: "bg-white/10 backdrop-blur-md rounded-xl p-4 sm:p-5 border border-white/20" do |f| %>
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="space-y-2">
+            <label class="block text-xs font-bold uppercase tracking-wider text-indigo-200">
+              Escolha o Motor de Inteligência Artificial:
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Opção Groq -->
+              <label class="relative flex items-center p-3 rounded-lg border cursor-pointer transition select-none <%= @current_provider == 'groq' ? 'bg-white/20 border-white text-white font-semibold shadow-xs' : 'bg-black/10 border-white/10 text-indigo-100 hover:bg-white/10' %>">
+                <%= f.radio_button :provider, "groq", checked: (@current_provider == "groq" || !@gemini_configured), class: "h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 mr-3" %>
+                <div class="text-xs sm:text-sm">
+                  <div class="flex items-center gap-1.5">
+                    <span>⚡ <strong>Groq (LPU)</strong></span>
+                    <% if @groq_configured %>
+                      <span class="text-3xs px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 font-normal">Disponível</span>
+                    <% else %>
+                      <span class="text-3xs px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-200 font-normal">Sem chave</span>
+                    <% end %>
+                  </div>
+                  <p class="text-xs text-indigo-200 font-normal mt-0.5">Modelo: <%= ENV.fetch("GROQ_MODEL", "openai/gpt-oss-120b") %> (velocidade LPU)</p>
+                </div>
+              </label>
+
+              <!-- Opção Google Gemini -->
+              <label class="relative flex items-center p-3 rounded-lg border cursor-pointer transition select-none <%= @current_provider == 'gemini' ? 'bg-white/20 border-white text-white font-semibold shadow-xs' : 'bg-black/10 border-white/10 text-indigo-100 hover:bg-white/10' %>">
+                <%= f.radio_button :provider, "gemini", checked: (@current_provider == "gemini" && @gemini_configured), class: "h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 mr-3" %>
+                <div class="text-xs sm:text-sm">
+                  <div class="flex items-center gap-1.5">
+                    <span>✨ <strong>Google Gemini</strong></span>
+                    <% if @gemini_configured %>
+                      <span class="text-3xs px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 font-normal">Disponível</span>
+                    <% else %>
+                      <span class="text-3xs px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-200 font-normal">Sem chave</span>
+                    <% end %>
+                  </div>
+                  <p class="text-xs text-indigo-200 font-normal mt-0.5">Modelo: <%= ENV.fetch("GEMINI_MODEL", "gemini-3.5-flash") %> (IA Google)</p>
+                </div>
+              </label>
+            </div>
+            
+            <div class="pt-1 flex items-center gap-2">
+              <%= f.check_box :save_as_default, { checked: true, class: "rounded border-white/30 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5 bg-black/20" }, "1", "0" %>
+              <%= f.label :save_as_default, "Salvar este provedor como meu padrão para futuras análises", class: "text-xs text-indigo-200 cursor-pointer select-none" %>
+            </div>
+          </div>
+
+          <div class="flex-shrink-0 self-start lg:self-center">
+            <%= f.button type: :submit, data: { turbo_confirm: "Deseja coletar suas métricas financeiras mais recentes e executar a análise com a IA selecionada?" }, class: "inline-flex items-center px-6 py-3.5 rounded-xl shadow-lg text-sm font-bold text-indigo-950 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition transform active:scale-95 cursor-pointer" do %>
+              <svg class="w-5 h-5 mr-2 text-indigo-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Gerar Análise com IA
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Cards de Status e Configuração dos Provedores de IA -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Card Groq -->
+    <div class="bg-white rounded-xl border <%= @groq_configured ? 'border-gray-200' : 'border-amber-300 bg-amber-50/40' %> p-5 shadow-xs flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">⚡</span>
+            <h3 class="text-base font-bold text-gray-900">Groq (LPU)</h3>
+          </div>
+          <% if @groq_configured %>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+              ● Conectado
+            </span>
+          <% else %>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+              ⚠️ Não configurado
+            </span>
+          <% end %>
+        </div>
+        <p class="text-xs text-gray-600 leading-relaxed mb-3">
+          Inferência de altíssima velocidade em chips LPU. Ideal para diagnósticos instantâneos.
+        </p>
+        <div class="text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100 font-mono text-gray-700 space-y-1">
+          <div><span class="text-gray-400">Modelo:</span> <%= ENV.fetch("GROQ_MODEL", "openai/gpt-oss-120b") %></div>
+          <div><span class="text-gray-400">Chave:</span> <%= @groq_configured ? "GROQ_API_KEY (definida)" : "GROQ_API_KEY (ausente no .env)" %></div>
+        </div>
+      </div>
+      <% if @groq_configured && @current_provider != 'groq' %>
+        <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end">
+          <%= button_to update_preference_financial_insights_path(provider: 'groq'), method: :patch, form_class: "inline-flex", class: "btn-secondary btn-sm text-brand-600 border-brand-200 hover:bg-brand-50 cursor-pointer" do %>
+            Definir Groq como Padrão →
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Card Google Gemini -->
+    <div class="bg-white rounded-xl border <%= @gemini_configured ? 'border-gray-200' : 'border-amber-300 bg-amber-50/40' %> p-5 shadow-xs flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">✨</span>
+            <h3 class="text-base font-bold text-gray-900">Google Gemini</h3>
+          </div>
+          <% if @gemini_configured %>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+              ● Conectado
+            </span>
+          <% else %>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+              ⚠️ Não configurado
+            </span>
+          <% end %>
+        </div>
+        <p class="text-xs text-gray-600 leading-relaxed mb-3">
+          Tecnologia multimodal de ponta do Google. Raciocínio aprofundado e contextualização financeira.
+        </p>
+        <div class="text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100 font-mono text-gray-700 space-y-1">
+          <div><span class="text-gray-400">Modelo:</span> <%= ENV.fetch("GEMINI_MODEL", "gemini-3.5-flash") %></div>
+          <div><span class="text-gray-400">Chave:</span> <%= @gemini_configured ? "GEMINI_API_KEY (definida)" : "GEMINI_API_KEY (ausente no .env)" %></div>
+        </div>
+      </div>
+      <% if @gemini_configured && @current_provider != 'gemini' %>
+        <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end">
+          <%= button_to update_preference_financial_insights_path(provider: 'gemini'), method: :patch, form_class: "inline-flex", class: "btn-secondary btn-sm text-purple-700 border-purple-200 hover:bg-purple-50 cursor-pointer" do %>
+            Definir Gemini como Padrão →
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Última Análise em Destaque -->
+  <% if @latest_insight.present? %>
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="border-b border-gray-100 bg-gray-50/70 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg <%= @latest_insight.provider == 'gemini' ? 'bg-purple-100 text-purple-700' : 'bg-indigo-100 text-indigo-700' %> font-bold text-sm">
+            <%= @latest_insight.provider == 'gemini' ? '✨' : '⚡' %>
+          </span>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-lg font-bold text-gray-900"><%= @latest_insight.title %></h2>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-3xs font-semibold <%= @latest_insight.provider == 'gemini' ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' %>">
+                <%= @latest_insight.provider_badge %>
+              </span>
+            </div>
+            <p class="text-xs text-gray-500">Gerado em <%= @latest_insight.formatted_date %> • Modelo: <%= @latest_insight.model_used %></p>
+          </div>
+        </div>
+        <div>
+          <%= link_to financial_insight_path(@latest_insight), class: "inline-flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition" do %>
+            Ver Análise Completa & Recomendações
+            <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Métricas rápidas da análise -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-gray-50/30 border-b border-gray-100">
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-xs">
+          <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Receitas</span>
+          <p class="text-xl font-bold text-emerald-600 mt-1">
+            <%= number_to_currency(@latest_insight.total_income, unit: "R$ ", separator: ",", delimiter: ".") %>
+          </p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-xs">
+          <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Despesas de Consumo</span>
+          <p class="text-xl font-bold text-rose-600 mt-1">
+            <%= number_to_currency(@latest_insight.total_expenses, unit: "R$ ", separator: ",", delimiter: ".") %>
+          </p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-xs">
+          <span class="text-xs font-medium text-gray-500 uppercase tracking-wider"><%= @latest_insight.total_investments > 0 ? "Investimentos (Aportes)" : "Saldo Operacional" %></span>
+          <p class="text-xl font-bold <%= @latest_insight.total_investments > 0 ? 'text-indigo-600' : (@latest_insight.net_savings >= 0 ? 'text-emerald-600' : 'text-rose-600') %> mt-1">
+            <%= number_to_currency(@latest_insight.total_investments > 0 ? @latest_insight.total_investments : @latest_insight.net_savings, unit: "R$ ", separator: ",", delimiter: ".") %>
+          </p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-xs">
+          <span class="text-xs font-medium text-gray-500 uppercase tracking-wider"><%= @latest_insight.total_investments > 0 ? "Saldo Livre Operacional" : "Taxa de Poupança" %></span>
+          <p class="text-xl font-bold <%= @latest_insight.net_savings >= 0 ? 'text-emerald-600' : 'text-rose-600' %> mt-1">
+            <%= @latest_insight.total_investments > 0 ? number_to_currency(@latest_insight.net_savings, unit: "R$ ", separator: ",", delimiter: ".") : "#{@latest_insight.savings_rate}%" %>
+          </p>
+        </div>
+      </div>
+
+      <!-- Resumo do Diagnóstico -->
+      <div class="p-6">
+        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">Diagnóstico Resumido</h3>
+        <p class="text-gray-700 text-sm leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100">
+          <%= @latest_insight.summary %>
+        </p>
+
+        <div class="mt-4 flex justify-end">
+          <%= link_to financial_insight_path(@latest_insight), class: "inline-flex items-center px-4 py-2 text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition" do %>
+            Abrir Relatório Completo & Plano de Ação
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Histórico de Análises Anteriores -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h2 class="text-lg font-bold text-gray-900">Histórico de Análises Salvas</h2>
+      <span class="text-xs font-medium text-gray-500"><%= @insights.total_count rescue @insights.size %> análises registradas</span>
+    </div>
+
+    <% if @insights.any? %>
+      <div class="divide-y divide-gray-100">
+        <% @insights.each do |insight| %>
+          <div class="p-5 hover:bg-gray-50 transition flex items-center justify-between gap-4">
+            <div class="space-y-1 min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="font-bold text-gray-900 hover:text-indigo-600 transition">
+                  <%= link_to insight.title, financial_insight_path(insight) %>
+                </span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                  <%= insight.period %>
+                </span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-3xs font-semibold <%= insight.provider == 'gemini' ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' %>">
+                  <%= insight.provider_badge %>
+                </span>
+              </div>
+              <p class="text-xs text-gray-500">
+                Gerado em <%= insight.formatted_date %> • Modelo: <%= insight.model_used %> • 
+                Saldo do mês: 
+                <strong class="<%= insight.net_savings >= 0 ? 'text-emerald-600' : 'text-rose-600' %>">
+                  <%= number_to_currency(insight.net_savings, unit: "R$ ", separator: ",", delimiter: ".") %>
+                </strong>
+              </p>
+            </div>
+
+            <div class="relative inline-block text-left flex-shrink-0" data-controller="dropdown">
+              <button type="button" class="action-menu-btn" data-dropdown-target="button" data-action="click->dropdown#toggle" title="Ações" aria-label="Menu de ações">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+              </button>
+
+              <div data-dropdown-target="menu" class="hidden action-menu-dropdown">
+                <%= link_to financial_insight_path(insight), class: "action-menu-item" do %>
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <span>Visualizar</span>
+                <% end %>
+                <div class="action-menu-divider"></div>
+                <%= button_to financial_insight_path(insight), method: :delete, data: { turbo_confirm: "Tem certeza que deseja excluir esta análise?" }, class: "action-menu-item action-menu-item-danger" do %>
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  <span>Excluir Análise</span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <% if respond_to?(:paginate) && @insights.respond_to?(:total_pages) %>
+        <div class="p-4 border-t border-gray-100 flex justify-center">
+          <%= paginate @insights %>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="text-center py-12 px-4">
+        <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 mb-3 text-2xl">
+          💡
+        </span>
+        <h3 class="text-base font-bold text-gray-900">Nenhuma análise gerada ainda</h3>
+        <p class="text-sm text-gray-500 max-w-sm mx-auto mt-1">
+          Selecione o motor de IA acima e clique no botão para gerar uma análise financeira detalhada e receber um plano prático de corte de custos.
+        </p>
+      </div>
+    <% end %>
+  </div>
+</div>

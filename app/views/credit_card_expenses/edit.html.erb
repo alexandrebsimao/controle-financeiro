@@ -1,0 +1,56 @@
+<% content_for :title, "Editar Parcela • Finances" %>
+
+<div class="max-w-2xl mx-auto space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Editar Parcela</h1>
+      <p class="text-xs text-slate-500 mt-0.5"><%= @purchase.title %> • Parcela #<%= @expense.installment_number %> de <%= @purchase.installments %></p>
+    </div>
+    <%= link_to "← Voltar à Compra", credit_card_purchase_path(@credit_card, @purchase), class: "text-xs font-semibold text-slate-500 hover:text-slate-800" %>
+  </div>
+
+  <div class="app-card p-6 sm:p-8">
+    <%= form_with model: @expense, url: credit_card_purchase_expense_path(@credit_card, @purchase, @expense), method: :patch, local: true, class: "space-y-6" do |f| %>
+      <% if @expense.errors.any? %>
+        <div class="rounded-2xl bg-rose-50 border border-rose-200/80 p-4">
+          <h3 class="text-xs font-bold text-rose-800 uppercase tracking-wider"><%= pluralize(@expense.errors.count, "erro") %> encontrado(s):</h3>
+          <ul class="mt-2 list-disc list-inside text-xs text-rose-700 space-y-0.5">
+            <% @expense.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <%= f.label :amount, "Valor da Parcela (R$)", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.number_field :amount, step: 0.01, required: true, class: "form-input-custom font-semibold text-slate-900" %>
+        </div>
+
+        <div>
+          <%= f.label :due_date, "Data de Vencimento", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.date_field :due_date, required: true, class: "form-input-custom" %>
+        </div>
+      </div>
+
+      <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-4">
+        <h4 class="text-xs font-bold text-indigo-950 uppercase tracking-wider mb-1">Informações da Fatura</h4>
+        <% if @expense.invoice %>
+          <p class="text-xs text-indigo-800">
+            Esta parcela está alocada na fatura de <strong><%= @expense.invoice.reference_label %></strong> (vencimento: <%= @expense.invoice.due_date.strftime("%d/%m/%Y") %>).
+          </p>
+        <% else %>
+          <p class="text-xs text-indigo-700">
+            Esta parcela ainda não está alocada em nenhuma fatura fechada.
+          </p>
+        <% end %>
+      </div>
+
+      <div class="flex items-center gap-3 pt-3 border-t border-slate-100">
+        <%= f.submit "Salvar Alterações", class: "btn-primary btn-md text-xs cursor-pointer" %>
+        <%= link_to "Cancelar", credit_card_purchase_path(@credit_card, @purchase), class: "btn-secondary btn-md text-xs" %>
+      </div>
+    <% end %>
+  </div>
+</div>

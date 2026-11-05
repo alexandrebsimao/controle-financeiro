@@ -1,0 +1,56 @@
+<div class="max-w-2xl mx-auto space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Nova Categoria</h1>
+      <p class="text-xs text-slate-500 mt-0.5">Cadastre uma categoria para organizar suas transações</p>
+    </div>
+    <%= link_to "← Voltar", categories_path, class: "text-xs font-semibold text-slate-500 hover:text-slate-800" %>
+  </div>
+
+  <div class="app-card p-6 sm:p-8">
+    <%= form_with model: @category, local: true, class: "space-y-6" do |f| %>
+      <% if @category.errors.any? %>
+        <div class="rounded-2xl bg-rose-50 border border-rose-200/80 p-4">
+          <h3 class="text-xs font-bold text-rose-800 uppercase tracking-wider"><%= pluralize(@category.errors.count, "erro") %> encontrado(s):</h3>
+          <ul class="mt-2 list-disc list-inside text-xs text-rose-700 space-y-0.5">
+            <% @category.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <%= f.label :name, "Nome da Categoria", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.text_field :name, placeholder: "Ex: Alimentação, Lazer, Saúde...", required: true, class: "form-input-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :transaction_type, "Tipo de Movimentação", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.select :transaction_type, [["Entrada (Receita)", "income"], ["Saída (Despesa)", "expense"], ["Investimento / Aporte", "investment"], ["Ambas", "both"]], {}, required: true, class: "form-select-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :icon, "Ícone (Emoji)", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.text_field :icon, placeholder: "Ex: 🍔, 🚗, 🏠, 💼...", class: "form-input-custom" %>
+        </div>
+
+        <div>
+          <%= f.label :color, "Cor Indicativa", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.color_field :color, class: "w-full h-10 p-1 rounded-xl border border-slate-300 cursor-pointer" %>
+        </div>
+
+        <div class="sm:col-span-2">
+          <%= f.label :parent_id, "Categoria Pai (opcional)", class: "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" %>
+          <%= f.select :parent_id, current_user.categories.top_level.map { |c| [c.name, c.id] }, { prompt: "Nenhuma (será categoria principal)" }, class: "form-select-custom" %>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 pt-3 border-t border-slate-100">
+        <%= f.submit "Criar Categoria", class: "btn-primary btn-md text-xs" %>
+        <%= link_to "Cancelar", categories_path, class: "btn-secondary btn-md text-xs" %>
+      </div>
+    <% end %>
+  </div>
+</div>

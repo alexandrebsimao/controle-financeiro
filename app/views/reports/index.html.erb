@@ -1,0 +1,519 @@
+<%
+  kpis = @report_data[:kpis]
+  savings_trend = @report_data[:savings_rate_trend]
+  category_evo = @report_data[:category_evolution]
+  rule = @report_data[:rule_50_30_20]
+  yoy = @report_data[:yoy_comparison]
+  top_expenses = @report_data[:top_expenses]
+  future = @report_data[:future_commitment]
+  cash_flow = @report_data[:daily_cash_flow]
+
+  future_datasets = [
+    {
+      name: "Cartões de Crédito",
+      type: "bar",
+      color: "#f43f5e",
+      backgroundColor: "rgba(244, 63, 94, 0.85)",
+      data: future[:credit_cards]
+    },
+    {
+      name: "Contas Fixas Recorrentes",
+      type: "bar",
+      color: "#f59e0b",
+      backgroundColor: "rgba(245, 158, 11, 0.85)",
+      data: future[:recurrences]
+    },
+    {
+      name: "Despesas Agendadas",
+      type: "bar",
+      color: "#8b5cf6",
+      backgroundColor: "rgba(139, 92, 246, 0.85)",
+      data: future[:scheduled]
+    },
+    {
+      name: "Renda Esperada",
+      type: "line",
+      color: "#10b981",
+      borderColor: "#10b981",
+      borderWidth: 3,
+      data: future[:expected_income]
+    }
+  ]
+%>
+
+<div class="space-y-6 max-w-7xl mx-auto pb-12" data-controller="tabs">
+  <!-- Top Navigation & Period Selector -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="p-2 rounded-xl bg-brand-50 text-brand-600 font-bold text-sm">📊</span>
+        <h1 class="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Relatórios & Inteligência Financeira</h1>
+      </div>
+      <p class="text-xs md:text-sm text-slate-500 mt-1">Diagnóstico profundo do passado e previsões de fluxo de caixa para tomada de decisão.</p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2.5">
+      <!-- Period Selector Pills -->
+      <div class="inline-flex p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+        <% [["3_months", "3 Meses"], ["6_months", "6 Meses"], ["12_months", "12 Meses"], ["current_year", "Ano Atual"]].each do |val, label| %>
+          <%= link_to label, reports_path(period: val), 
+                class: "px-3 py-1.5 rounded-lg transition-all #{ @period == val ? 'bg-white text-brand-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900' }" %>
+        <% end %>
+      </div>
+
+      <!-- CSV Export Button -->
+      <%= link_to reports_path(period: @period, format: :csv), class: "btn-secondary btn-md text-xs flex items-center gap-2 shadow-2xs", title: "Exportar dados consolidados em formato CSV" do %>
+        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        <span>Exportar CSV</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Smart KPI Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Card 1: Runway Reserva -->
+    <div class="app-stat-card relative overflow-hidden bg-white">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">🛡️</div>
+          <div>
+            <p class="text-xs font-semibold text-slate-500">Reserva de Emergência</p>
+            <p class="text-2xl font-black text-slate-900 tracking-tight mt-0.5"><%= kpis[:runway_months] %> <span class="text-xs font-normal text-slate-500">meses</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3">
+        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+          <% progress = [[(kpis[:runway_months] / 6.0) * 100, 100].min, 0].max %>
+          <div class="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style="width: <%= progress %>%"></div>
+        </div>
+        <div class="flex justify-between items-center text-[10px] text-slate-400 mt-1">
+          <span>Meta: 6 meses</span>
+          <span>Custo: <%= number_to_currency(kpis[:avg_monthly_expense], unit: "R$ ") %>/mês</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Taxa Média de Poupança -->
+    <div class="app-stat-card relative overflow-hidden bg-white">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-sm">📈</div>
+          <div>
+            <p class="text-xs font-semibold text-slate-500">Taxa Média de Poupança</p>
+            <p class="text-2xl font-black text-slate-900 tracking-tight mt-0.5"><%= kpis[:avg_savings_rate] %>%</p>
+          </div>
+        </div>
+        <% if kpis[:avg_savings_rate] >= 20 %>
+          <span class="badge-success text-[10px]">Meta 20% ✅</span>
+        <% elsif kpis[:avg_savings_rate] > 0 %>
+          <span class="badge-info text-[10px]">Positiva</span>
+        <% else %>
+          <span class="badge-danger text-[10px]">Déficit ⚠️</span>
+        <% end %>
+      </div>
+      <p class="text-[11px] text-slate-500 mt-3">Percentual de receita poupado nos últimos <%= @period_months || 6 %> meses.</p>
+      <% if kpis[:total_invested_period].to_d > 0 %>
+        <p class="text-[11px] font-semibold text-indigo-600 mt-1 flex items-center gap-1">
+          <span>💎</span> <%= number_to_currency(kpis[:total_invested_period], unit: "R$ ") %> em aportes
+        </p>
+      <% end %>
+    </div>
+
+    <!-- Card 3: Comprometimento Próximo Mês -->
+    <div class="app-stat-card relative overflow-hidden bg-white">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm">💳</div>
+          <div>
+            <p class="text-xs font-semibold text-slate-500">Comprometimento Próx. Mês</p>
+            <p class="text-2xl font-black text-slate-900 tracking-tight mt-0.5"><%= kpis[:next_month_commitment_rate] %>%</p>
+          </div>
+        </div>
+        <% if kpis[:next_month_commitment_rate] <= 50 %>
+          <span class="badge-success text-[10px]">Confortável</span>
+        <% elsif kpis[:next_month_commitment_rate] <= 70 %>
+          <span class="badge-warning text-[10px]">Atenção</span>
+        <% else %>
+          <span class="badge-danger text-[10px]">Alerta Alto</span>
+        <% end %>
+      </div>
+      <p class="text-[11px] text-slate-500 mt-3">
+        <%= number_to_currency(kpis[:next_month_committed], unit: "R$ ") %> já fixados em faturas e contas.
+      </p>
+    </div>
+
+    <!-- Card 4: Menor Saldo Previsto (60 dias) -->
+    <div class="app-stat-card relative overflow-hidden bg-white">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg <%= kpis[:danger_of_negative_balance] ? 'bg-rose-50 text-rose-600' : 'bg-indigo-50 text-indigo-600' %> flex items-center justify-center font-bold text-sm">📉</div>
+          <div>
+            <p class="text-xs font-semibold text-slate-500">Mínimo em Caixa (60d)</p>
+            <p class="text-2xl font-black <%= kpis[:lowest_projected_balance] < 0 ? 'text-rose-600' : 'text-slate-900' %> tracking-tight mt-0.5">
+              <%= number_to_currency(kpis[:lowest_projected_balance], unit: "R$ ") %>
+            </p>
+          </div>
+        </div>
+        <% if kpis[:danger_of_negative_balance] %>
+          <span class="badge-danger text-[10px]">Risco Negativo!</span>
+        <% else %>
+          <span class="badge-success text-[10px]">Caixa Seguro</span>
+        <% end %>
+      </div>
+      <p class="text-[11px] text-slate-500 mt-3">Menor ponto projetado na simulação diária futura.</p>
+    </div>
+  </div>
+
+  <!-- Tab Buttons -->
+  <div class="border-b border-slate-200">
+    <nav class="flex space-x-6" aria-label="Tabs">
+      <button 
+        type="button"
+        data-tabs-target="tabButton"
+        data-tab="tab-past"
+        data-action="click->tabs#showTab"
+        class="inline-flex items-center gap-2 py-3 px-1 border-b-2 font-bold text-sm transition-colors text-brand-700 bg-brand-50/50 border-brand-600 rounded-t-lg"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>1. Diagnóstico do Passado</span>
+      </button>
+
+      <button 
+        type="button"
+        data-tabs-target="tabButton"
+        data-tab="tab-future"
+        data-action="click->tabs#showTab"
+        class="inline-flex items-center gap-2 py-3 px-1 border-b-2 font-semibold text-sm transition-colors text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        <span>2. Previsão & Previsibilidade Futura</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- TAB 1: PASSADO -->
+  <div id="tab-past" class="space-y-6" data-tabs-target="tab">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Gráfico 1: Combo Taxa de Poupança (2 colunas) -->
+      <div class="lg:col-span-2 app-card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Balanço & Taxa de Poupança Mês a Mês</h2>
+            <p class="text-xs text-slate-500">Receitas vs Despesas (barras) e percentual economizado (linha).</p>
+          </div>
+          <span class="badge-neutral text-[10px]">Visão Mensal</span>
+        </div>
+        <div class="h-72">
+          <canvas 
+            data-controller="chart"
+            data-chart-type-value="savings-rate"
+            data-chart-labels-value="<%= savings_trend[:labels].to_json %>"
+            data-chart-income-value="<%= savings_trend[:incomes].to_json %>"
+            data-chart-expenses-value="<%= savings_trend[:expenses].to_json %>"
+            data-chart-investments-value="<%= savings_trend[:investments].to_json %>"
+            data-chart-rates-value="<%= savings_trend[:rates].to_json %>">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- Gráfico 2: Regra 50/30/20 (1 coluna) -->
+      <div class="app-card p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-base font-bold text-slate-900">Regra 50 / 30 / 20</h2>
+            <span class="badge-primary text-[10px]">Distribuição</span>
+          </div>
+          <p class="text-xs text-slate-500 mb-4">Necessidades Básicas (50%), Desejos/Estilo (30%), Reserva (20%).</p>
+          
+          <div class="h-48 relative">
+            <canvas 
+              data-controller="chart"
+              data-chart-type-value="doughnut"
+              data-chart-labels-value="<%= ['Necessidades', 'Estilo de Vida', 'Reserva / Poupado'].to_json %>"
+              data-chart-data-value="<%= [rule[:necessities_amount], rule[:lifestyle_amount], rule[:savings_amount]].to_json %>"
+              data-chart-colors-value="<%= ['#3b82f6', '#f59e0b', '#10b981'].to_json %>">
+            </canvas>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 space-y-2 text-xs">
+          <div class="flex justify-between items-center">
+            <span class="flex items-center gap-1.5 font-medium text-slate-700">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Necessidades
+            </span>
+            <div class="text-right">
+              <span class="font-bold text-slate-900"><%= rule[:necessities_pct] %>%</span>
+              <span class="text-slate-400 text-[10px]"> (meta 50%)</span>
+            </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="flex items-center gap-1.5 font-medium text-slate-700">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Estilo de Vida
+            </span>
+            <div class="text-right">
+              <span class="font-bold text-slate-900"><%= rule[:lifestyle_pct] %>%</span>
+              <span class="text-slate-400 text-[10px]"> (meta 30%)</span>
+            </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="flex items-center gap-1.5 font-medium text-slate-700">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Poupança/Reserva
+            </span>
+            <div class="text-right">
+              <span class="font-bold text-slate-900"><%= rule[:savings_pct] %>%</span>
+              <span class="text-slate-400 text-[10px]"> (meta 20%)</span>
+              <% if rule[:invested_amount].to_d > 0 %>
+                <div class="text-[10px] text-indigo-600 font-semibold">💎 <%= number_to_currency(rule[:invested_amount], unit: "R$ ") %> em aportes</div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Linha 2: Evolução de Categorias & YoY Comparison -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Gráfico: Evolução por Categoria Stacked (2 colunas) -->
+      <div class="lg:col-span-2 app-card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Evolução dos Gastos por Categoria</h2>
+            <p class="text-xs text-slate-500">Comportamento das 5 principais categorias de consumo ao longo dos meses.</p>
+          </div>
+          <span class="badge-neutral text-[10px]">Empilhado</span>
+        </div>
+        <div class="h-72">
+          <% if category_evo[:datasets].any? %>
+            <canvas 
+              data-controller="chart"
+              data-chart-type-value="bar"
+              data-chart-stacked-value="true"
+              data-chart-labels-value="<%= category_evo[:labels].to_json %>"
+              data-chart-datasets-value="<%= category_evo[:datasets].to_json %>">
+            </canvas>
+          <% else %>
+            <div class="flex flex-col items-center justify-center h-full text-slate-400 text-xs">
+              <p>Nenhuma despesa categorizada no período selecionado.</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Card YoY (1 coluna) -->
+      <div class="app-card p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-base font-bold text-slate-900">Comparativo Ano a Ano (YoY)</h2>
+            <span class="badge-neutral text-[10px]">Mês Atual vs <%= yoy[:last_year_month] %></span>
+          </div>
+          <p class="text-xs text-slate-500 mb-4">Evolução em relação ao mesmo mês do ano anterior.</p>
+
+          <div class="space-y-4">
+            <!-- Receitas YoY -->
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-semibold text-slate-600">Receitas</span>
+                <span class="font-bold <%= yoy[:income_change_pct] >= 0 ? 'text-emerald-600' : 'text-rose-600' %>">
+                  <%= yoy[:income_change_pct] >= 0 ? "+#{yoy[:income_change_pct]}%" : "#{yoy[:income_change_pct]}%" %>
+                </span>
+              </div>
+              <div class="flex justify-between items-center text-xs mt-1">
+                <span class="text-slate-400">Atual: <%= number_to_currency(yoy[:current_income], unit: "R$ ") %></span>
+                <span class="text-slate-400">Ano Passado: <%= number_to_currency(yoy[:last_year_income], unit: "R$ ") %></span>
+              </div>
+            </div>
+
+            <!-- Despesas YoY -->
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-semibold text-slate-600">Despesas</span>
+                <span class="font-bold <%= yoy[:expense_change_pct] <= 0 ? 'text-emerald-600' : 'text-rose-600' %>">
+                  <%= yoy[:expense_change_pct] >= 0 ? "+#{yoy[:expense_change_pct]}%" : "#{yoy[:expense_change_pct]}%" %>
+                </span>
+              </div>
+              <div class="flex justify-between items-center text-xs mt-1">
+                <span class="text-slate-400">Atual: <%= number_to_currency(yoy[:current_expense], unit: "R$ ") %></span>
+                <span class="text-slate-400">Ano Passado: <%= number_to_currency(yoy[:last_year_expense], unit: "R$ ") %></span>
+              </div>
+            </div>
+
+            <!-- Resultado Líquido YoY -->
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-semibold text-slate-600">Resultado Líquido</span>
+                <span class="font-bold text-slate-900"><%= number_to_currency(yoy[:current_net], unit: "R$ ") %></span>
+              </div>
+              <div class="text-[11px] text-slate-400 mt-1">
+                Ano passado no mesmo período: <%= number_to_currency(yoy[:last_year_net], unit: "R$ ") %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-[10px] text-slate-400 mt-4 italic">* Compara <%= yoy[:current_month] %> diretamente com <%= yoy[:last_year_month] %>.</p>
+      </div>
+    </div>
+
+    <!-- Tabela: Top Maiores Gastos do Período -->
+    <div class="app-card overflow-hidden">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Maiores Desembolsos do Período (Princípio de Pareto)</h2>
+          <p class="text-xs text-slate-500">As maiores saídas individuais que mais impactaram seu orçamento.</p>
+        </div>
+        <span class="badge-neutral text-xs">Top <%= top_expenses.size %> Lançamentos</span>
+      </div>
+
+      <% if top_expenses.any? %>
+        <div class="overflow-x-auto">
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Categoria</th>
+                <th>Conta / Origem</th>
+                <th class="text-right">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% top_expenses.each do |tx| %>
+                <tr>
+                  <td class="font-medium text-slate-600 text-xs"><%= tx.due_date&.strftime("%d/%m/%Y") || tx.created_at.strftime("%d/%m/%Y") %></td>
+                  <td class="font-semibold text-slate-900"><%= tx.title %></td>
+                  <td>
+                    <% if tx.category %>
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold" style="background-color: <%= tx.category.color %>15; color: <%= tx.category.color %>;">
+                        <span class="w-1.5 h-1.5 rounded-full" style="background-color: <%= tx.category.color %>;"></span>
+                        <%= tx.category.name %>
+                      </span>
+                    <% else %>
+                      <span class="badge-neutral text-xs">Sem Categoria</span>
+                    <% end %>
+                  </td>
+                  <td class="text-xs text-slate-500"><%= tx.bank_account&.name || "—" %></td>
+                  <td class="text-right font-black text-rose-600"><%= number_to_currency(tx.amount, unit: "R$ ") %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="p-8 text-center text-slate-400 text-xs">
+          Nenhuma transação encontrada no período.
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- TAB 2: PREVISÃO FUTURA & FLUXO DE CAIXA -->
+  <div id="tab-future" class="hidden space-y-6" data-tabs-target="tab">
+    <!-- Gráfico: Comprometimento de Renda Futura (Próximos 6 meses) -->
+    <div class="app-card p-5">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Comprometimento de Renda Futura (Próximos 6 Meses)</h2>
+          <p class="text-xs text-slate-500">Parcelas de faturas, custos fixos e despesas agendadas vs Renda mensal esperada.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="badge-neutral text-[10px]">Semestre Futuro</span>
+        </div>
+      </div>
+      <div class="h-80">
+        <canvas 
+          data-controller="chart"
+          data-chart-type-value="bar"
+          data-chart-stacked-value="true"
+          data-chart-labels-value="<%= future[:labels].to_json %>"
+          data-chart-datasets-value="<%= future_datasets.to_json %>">
+        </canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico: Fluxo de Caixa Diário Projetado (Próximos 60 Dias) -->
+    <div class="app-card p-5">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Fluxo de Caixa Diário Projetado (Próximos 60 Dias)</h2>
+          <p class="text-xs text-slate-500">Simulação dia a dia do saldo total em conta considerando vencimentos de boletos, faturas e entradas.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <% if kpis[:danger_of_negative_balance] %>
+            <span class="badge-danger text-xs font-bold">Aviso: Ponto de Saldo Negativo Previsto</span>
+          <% else %>
+            <span class="badge-success text-xs font-bold">Saldo Positivo em todo o período</span>
+          <% end %>
+        </div>
+      </div>
+      <div class="h-72">
+        <canvas 
+          data-controller="chart"
+          data-chart-type-value="daily-cash-flow"
+          data-chart-labels-value="<%= cash_flow[:labels].to_json %>"
+          data-chart-balance-value="<%= cash_flow[:balances].to_json %>">
+        </canvas>
+      </div>
+    </div>
+
+    <!-- Tabela Detalhada: Previsão Mês a Mês do Semestre -->
+    <div class="app-card overflow-hidden">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Detalhamento da Previsão Semestral</h2>
+          <p class="text-xs text-slate-500">Discriminação das obrigações futuras e saldo livre estimado.</p>
+        </div>
+        <span class="badge-neutral text-xs">6 Meses</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th class="text-right">Faturas de Cartão</th>
+              <th class="text-right">Despesas Fixas</th>
+              <th class="text-right">Outros Agendados</th>
+              <th class="text-right">Renda Prevista</th>
+              <th class="text-right">Margem Livre</th>
+              <th class="text-center">% Comprometido</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% future[:labels].each_with_index do |lbl, idx| %>
+              <% 
+                card_amt = future[:credit_cards][idx]
+                fix_amt = future[:recurrences][idx]
+                sched_amt = future[:scheduled][idx]
+                inc_amt = future[:expected_income][idx]
+                margin = future[:free_margin][idx]
+                rate = future[:rates][idx]
+              %>
+              <tr>
+                <td class="font-bold text-slate-900 text-sm"><%= lbl %></td>
+                <td class="text-right font-medium text-rose-600 text-xs"><%= number_to_currency(card_amt, unit: "R$ ") %></td>
+                <td class="text-right font-medium text-amber-600 text-xs"><%= number_to_currency(fix_amt, unit: "R$ ") %></td>
+                <td class="text-right font-medium text-purple-600 text-xs"><%= number_to_currency(sched_amt, unit: "R$ ") %></td>
+                <td class="text-right font-bold text-emerald-600 text-xs"><%= number_to_currency(inc_amt, unit: "R$ ") %></td>
+                <td class="text-right font-black <%= margin >= 0 ? 'text-slate-900' : 'text-rose-600' %> text-sm">
+                  <%= number_to_currency(margin, unit: "R$ ") %>
+                </td>
+                <td class="text-center">
+                  <% if rate <= 50 %>
+                    <span class="badge-success text-xs font-bold"><%= rate %>%</span>
+                  <% elsif rate <= 75 %>
+                    <span class="badge-warning text-xs font-bold"><%= rate %>%</span>
+                  <% else %>
+                    <span class="badge-danger text-xs font-bold"><%= rate %>%</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

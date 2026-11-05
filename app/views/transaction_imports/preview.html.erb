@@ -1,0 +1,277 @@
+<div class="space-y-6 max-w-7xl mx-auto" data-controller="statement-preview">
+  <!-- Top Navigation & Title -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <div class="flex items-center space-x-2 text-sm text-gray-500 mb-1">
+        <%= link_to "← Voltar", new_transaction_import_path, class: "hover:text-gray-700 transition" %>
+        <span>/</span>
+        <span>Revisão do Extrato</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+        <span>Prévia de Importação</span>
+        <% if @file_format.present? %>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-gray-800 border border-gray-200">
+            Formato: <%= @file_format %>
+          </span>
+        <% end %>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">
+          <%= @provider_badge %> (<%= @model_used %>)
+        </span>
+      </h1>
+      <p class="text-sm text-gray-500 mt-1">
+        Revise os lançamentos identificados na conta <strong><%= @bank_account.name %></strong> antes de efetivar. Você pode editar qualquer informação diretamente na tabela.
+      </p>
+    </div>
+
+    <!-- Action Buttons (Desktop top) -->
+    <div class="flex items-center gap-2">
+      <%= button_to "Descartar", cancel_transaction_imports_path(preview_id: @preview_id), method: :delete, form_class: "inline-flex", class: "btn-secondary btn-md text-xs cursor-pointer" %>
+      <button type="button" onclick="document.getElementById('import-form').submit();" class="btn-primary btn-md gap-1.5 text-xs shadow-sm cursor-pointer" id="confirm-btn-top">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span class="submit-btn-label">Confirmar Importação</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Summary Cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Entradas Encontradas</div>
+      <div class="text-lg sm:text-xl font-bold text-emerald-600 mt-1" id="kpi-income">
+        <%= number_to_currency(@total_income, unit: "R$ ", separator: ",", delimiter: ".") %>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Saídas Encontradas</div>
+      <div class="text-lg sm:text-xl font-bold text-rose-600 mt-1" id="kpi-expense">
+        <%= number_to_currency(@total_expense, unit: "R$ ", separator: ",", delimiter: ".") %>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Líquido Extrato</div>
+      <div class="text-lg sm:text-xl font-bold <%= @net_balance >= 0 ? 'text-indigo-600' : 'text-amber-600' %> mt-1" id="kpi-net">
+        <%= number_to_currency(@net_balance, unit: "R$ ", separator: ",", delimiter: ".") %>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Lançamentos</div>
+      <div class="text-lg sm:text-xl font-bold text-gray-900 mt-1 flex items-baseline justify-between">
+        <span><%= @total_items %> itens</span>
+        <span class="text-xs font-normal text-indigo-600" id="selected-counter">
+          <%= @items.count { |i| i[:selected] } %> selecionados
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerta de Duplicatas se houver -->
+  <% duplicate_count = @items.count { |i| i[:is_duplicate] } %>
+  <% if duplicate_count > 0 %>
+    <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start space-x-3 text-amber-800 text-sm">
+      <svg class="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <div>
+        <p class="font-bold">Atenção: <%= duplicate_count %> possível(is) movimentação(ões) já existente(s) identificada(s)!</p>
+        <p class="text-xs text-amber-700 mt-0.5">
+          Para evitar duplicidade, nós desmarcamos automaticamente os lançamentos que coincidem em data e valor com movimentações já cadastradas. Caso deseje importá-los mesmo assim, basta marcar a caixa de seleção correspondente.
+        </p>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Table Card Form -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <%= form_with url: transaction_imports_path, method: :post, id: "import-form", local: true do |f| %>
+      <%= hidden_field_tag :preview_id, @preview_id %>
+      <%= hidden_field_tag :bank_account_id, @bank_account.id %>
+
+      <div class="p-4 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center space-x-3">
+          <label class="inline-flex items-center space-x-2 text-sm font-semibold text-gray-700 cursor-pointer">
+            <input type="checkbox" id="select-all-checkbox" checked class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+            <span>Marcar/Desmarcar Todos</span>
+          </label>
+          <span class="text-gray-300">|</span>
+          <span class="text-xs text-gray-500">
+            Dica: você pode alterar título, categoria, data e tipo antes de confirmar.
+          </span>
+        </div>
+
+        <div class="text-xs font-medium text-gray-600">
+          Conta: <span class="font-bold text-gray-800"><%= @bank_account.name %></span>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-left text-xs sm:text-sm">
+          <thead class="bg-gray-50 text-gray-500 uppercase tracking-wider font-semibold">
+            <tr>
+              <th scope="col" class="py-3 px-3 text-center w-10">#</th>
+              <th scope="col" class="py-3 px-3 w-32">Data</th>
+              <th scope="col" class="py-3 px-3">Título / Descrição</th>
+              <th scope="col" class="py-3 px-3 w-28">Tipo</th>
+              <th scope="col" class="py-3 px-3 w-48">Categoria</th>
+              <th scope="col" class="py-3 px-3 w-36">Método</th>
+              <th scope="col" class="py-3 px-3 w-32 text-right">Valor (R$)</th>
+              <th scope="col" class="py-3 px-3 w-16 text-center">Pago?</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 bg-white">
+            <% @items.each do |item| %>
+              <% row_id = item[:row_id] %>
+              <% is_dup = item[:is_duplicate] %>
+              <% is_income = item[:transaction_type] == "income" %>
+              
+              <tr class="hover:bg-gray-50/80 transition <%= 'bg-amber-50/40' if is_dup %>" id="row-<%= row_id %>">
+                <!-- Checkbox -->
+                <td class="py-3 px-3 text-center">
+                  <input type="checkbox" name="selected_rows[]" value="<%= row_id %>" class="row-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4" <%= 'checked' if item[:selected] %> data-amount="<%= item[:amount] %>" data-type="<%= item[:transaction_type] %>">
+                </td>
+
+                <!-- Data -->
+                <td class="py-3 px-3 whitespace-nowrap">
+                  <input type="date" name="items[<%= row_id %>][due_date]" value="<%= item[:due_date] %>" required class="block w-full text-xs rounded border-gray-300 py-1 px-1.5 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+                </td>
+
+                <!-- Título + Badges -->
+                <td class="py-3 px-3">
+                  <div class="space-y-1">
+                    <input type="text" name="items[<%= row_id %>][title]" value="<%= item[:title] %>" required class="block w-full text-xs font-medium rounded border-gray-300 py-1 px-2 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+                    <% if is_dup %>
+                      <div class="flex items-center space-x-1 text-[11px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded w-fit">
+                        <span>⚠️ <%= item[:duplicate_reason] %></span>
+                      </div>
+                    <% end %>
+                    <% if item[:notes].present? %>
+                      <div class="text-[11px] text-gray-400 truncate max-w-xs" title="<%= item[:notes] %>">
+                        <%= item[:notes] %>
+                      </div>
+                    <% end %>
+                  </div>
+                  <input type="hidden" name="items[<%= row_id %>][notes]" value="<%= item[:notes] %>">
+                </td>
+
+                <!-- Tipo -->
+                <td class="py-3 px-3 whitespace-nowrap">
+                  <select name="items[<%= row_id %>][transaction_type]" class="block w-full text-xs font-semibold rounded border-gray-300 py-1 px-1.5 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm <%= is_income ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50' %>">
+                    <option value="expense" <%= 'selected' unless is_income %>>Saída (Despesa)</option>
+                    <option value="income" <%= 'selected' if is_income %>>Entrada (Receita)</option>
+                  </select>
+                </td>
+
+                <!-- Categoria -->
+                <td class="py-3 px-3">
+                  <select name="items[<%= row_id %>][category_id]" class="block w-full text-xs rounded border-gray-300 py-1 px-1.5 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+                    <option value="">Sem Categoria</option>
+                    <% @categories.each do |cat| %>
+                      <option value="<%= cat.id %>" <%= 'selected' if item[:category_id].to_s == cat.id.to_s %>>
+                        <%= cat.full_name %>
+                      </option>
+                    <% end %>
+                  </select>
+                </td>
+
+                <!-- Método -->
+                <td class="py-3 px-3 whitespace-nowrap">
+                  <select name="items[<%= row_id %>][payment_method]" class="block w-full text-xs rounded border-gray-300 py-1 px-1.5 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+                    <% Transaction::PAYMENT_METHODS.each do |key, label| %>
+                      <option value="<%= key %>" <%= 'selected' if item[:payment_method] == key %>><%= label %></option>
+                    <% end %>
+                  </select>
+                </td>
+
+                <!-- Valor -->
+                <td class="py-3 px-3 whitespace-nowrap text-right">
+                  <div class="relative rounded-md shadow-sm">
+                    <input type="number" step="0.01" min="0.01" name="items[<%= row_id %>][amount]" value="<%= item[:amount] %>" required class="block w-full text-xs font-bold text-right rounded border-gray-300 py-1 pr-2 pl-2 focus:border-indigo-500 focus:ring-indigo-500 <%= is_income ? 'text-emerald-600' : 'text-gray-900' %>">
+                  </div>
+                </td>
+
+                <!-- Pago? -->
+                <td class="py-3 px-3 text-center">
+                  <input type="checkbox" name="items[<%= row_id %>][paid]" value="1" <%= 'checked' if item[:paid] %> class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Action Bar Bottom -->
+      <div class="p-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+        <div class="text-xs text-gray-500">
+          Total de itens selecionados: <span id="bottom-selected-count" class="font-bold text-gray-800"><%= @items.count { |i| i[:selected] } %></span> de <%= @total_items %>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <%= link_to "Descartar Importação", cancel_transaction_imports_path(preview_id: @preview_id), data: { turbo_method: :delete }, class: "btn-secondary btn-md text-xs" %>
+          
+          <button type="submit" class="btn-primary btn-md gap-1.5 text-xs shadow-sm cursor-pointer" id="confirm-btn-bottom">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span class="submit-btn-label">Confirmar Importação</span>
+          </button>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+    const selectedCounter = document.getElementById('selected-counter');
+    const bottomSelectedCount = document.getElementById('bottom-selected-count');
+    const btnLabels = document.querySelectorAll('.submit-btn-label');
+
+    function updateCounters() {
+      const selected = Array.from(rowCheckboxes).filter(cb => cb.checked);
+      const count = selected.length;
+      
+      if (selectedCounter) selectedCounter.innerText = `${count} selecionado(s)`;
+      if (bottomSelectedCount) bottomSelectedCount.innerText = count;
+
+      btnLabels.forEach(label => {
+        label.innerText = count > 0 ? `Confirmar Importação (${count})` : 'Selecione ao menos 1 item';
+      });
+
+      const confirmBtns = [document.getElementById('confirm-btn-top'), document.getElementById('confirm-btn-bottom')];
+      confirmBtns.forEach(btn => {
+        if (btn) {
+          btn.disabled = (count === 0);
+          btn.classList.toggle('opacity-50', count === 0);
+          btn.classList.toggle('cursor-not-allowed', count === 0);
+        }
+      });
+
+      if (selectAllCheckbox) {
+        selectAllCheckbox.checked = (count === rowCheckboxes.length);
+        selectAllCheckbox.indeterminate = (count > 0 && count < rowCheckboxes.length);
+      }
+    }
+
+    if (selectAllCheckbox) {
+      selectAllCheckbox.addEventListener('change', function() {
+        const check = this.checked;
+        rowCheckboxes.forEach(cb => {
+          cb.checked = check;
+        });
+        updateCounters();
+      });
+    }
+
+    rowCheckboxes.forEach(cb => {
+      cb.addEventListener('change', updateCounters);
+    });
+
+    updateCounters();
+  });
+</script>
