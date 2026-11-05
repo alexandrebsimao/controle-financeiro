@@ -35,9 +35,12 @@ Diferente de sistemas tradicionais, a plataforma combina organização de **múl
 
 ## 🌟 Funcionalidades Principais
 
-### 📊 1. Dashboard e Gestão Consolidada
+### 📊 1. Dashboard, Relatórios e Gestão Consolidada
+> [!NOTE]
+> **Em Desenvolvimento Ativo:** As telas de **Dashboard** e o módulo de **Relatórios** estão passando por melhorias contínuas de layout, refinamento de gráficos e agregação de novas métricas analíticas.
+
 - **Visão 360°:** Saldo consolidado, receitas x despesas do mês e saldo previsto para os próximos períodos.
-- **Gráficos Interativos:** Distribuição de despesas por categoria e evolução temporal do patrimônio.
+- **Gráficos e Relatórios:** Distribuição de despesas por categoria e evolução temporal do patrimônio *(módulos em evolução)*.
 - **Múltiplas Contas Bancárias:** Acompanhe saldos individuais e movimentações de contas correntes, poupanças e investimentos.
 - **Transferências Pareadas:** Transações entre contas do mesmo usuário com garantia de integridade e idempotência.
 
